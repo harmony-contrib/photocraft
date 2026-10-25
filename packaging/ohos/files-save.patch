@@ -1,0 +1,14 @@
+diff --git a/plugins/files/src/main/ets/FilesPlugin.ets b/plugins/files/src/main/ets/FilesPlugin.ets
+--- a/plugins/files/src/main/ets/FilesPlugin.ets
++++ b/plugins/files/src/main/ets/FilesPlugin.ets
+@@ -116,6 +116,10 @@ async function showFileDialog(
+ 
+   if (options.dialogType === "save-file") {
+     const saveOptions = new picker.DocumentSaveOptions();
++    // Avoid allocating a placeholder before Rust finishes its atomic save.
++    if (deviceInfo.sdkApiVersion >= 23) {
++      saveOptions.autoCreateEmptyFile = false;
++    }
+     saveOptions.defaultFilePathUri = location;
+     if (options.suggestedName) {
+       saveOptions.newFileNames = [options.suggestedName];

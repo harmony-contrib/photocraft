@@ -263,6 +263,10 @@ fn fontconfig_cjk_scan() -> &'static FontconfigCjkScan {
 pub fn start_fontconfig_cjk_scan() {
     use std::sync::atomic::Ordering;
 
+    if cfg!(target_env = "ohos") {
+        return;
+    }
+
     let scan = fontconfig_cjk_scan();
     if scan.started.swap(true, Ordering::Relaxed) {
         return;
@@ -392,7 +396,9 @@ fn fontconfig_cjk_font(_: CjkScript) -> Option<FontFile> {
 pub fn font_files(script: CjkScript) -> Vec<FontFile> {
     use CjkScript::*;
     let f = |p: &str, family: &'static str| FontFile { path: p.into(), family: family.to_string() };
-    if cfg!(target_os = "macos") {
+    if cfg!(target_env = "ohos") {
+        vec![f("/system/fonts/HarmonyOS_Sans_SC.ttf", ""), f("/system/fonts/NotoSansCJK-Regular.ttc", "")]
+    } else if cfg!(target_os = "macos") {
         let pingfang = |family| mac_pingfang().map(|path| FontFile { path, family });
         match script {
             Japanese => vec![f("/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc", ""), f("/System/Library/Fonts/ヒラギノ角ゴシック W4.ttc", "")],

@@ -31,6 +31,8 @@ pub enum FileDialogRequest {
     Folder { initial_dir: Option<String> },
     /// Where to write, starting from `suggested` (a file name, or the document's own path).
     Save { suggested: String },
+    /// Grant access needed to safely replace an existing file without choosing a new name.
+    AuthorizeSave { path: String },
 }
 
 /// The user's choice (a cancelled dialog answers `None`).
@@ -60,6 +62,11 @@ pub struct FileDialogReply {
 }
 
 impl FileDialogReply {
+    /// Surface a platform or permission failure separately from user cancellation.
+    pub fn send_error(self, error: impl Into<String>) {
+        self.send(Some(FileDialogAnswer::Unavailable(error.into())));
+    }
+
     pub fn send(self, answer: Option<FileDialogAnswer>) {
         // Nothing is waiting any more when the app has quit meanwhile.
         let _ = self.tx.send(answer);
@@ -117,7 +124,7 @@ impl PhotocraftApp {
         let kind = match request {
             FileDialogRequest::Open { .. } => "open",
             FileDialogRequest::Folder { .. } => "folder",
-            FileDialogRequest::Save { .. } => "save",
+            FileDialogRequest::Save { .. } | FileDialogRequest::AuthorizeSave { .. } => "save",
         };
         let then: Then = Box::new(move |app, answer| match answer {
             None => Err(CANCELLED.into()),

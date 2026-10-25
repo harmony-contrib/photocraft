@@ -58,7 +58,7 @@ impl PhotocraftApp {
             }
         };
         let image = image.filter(|(w, h, bytes)| *w > 0 && *h > 0 && bytes.len() == *w as usize * *h as usize * 4);
-        let Some((w, h, bytes)) = image else {
+        let Some(image) = image else {
             if self.os_clip_sig.take().is_some() && !self.clip_unmirrored {
                 self.session.clipboard = None;
                 self.clip_external = false;
@@ -66,9 +66,16 @@ impl PhotocraftApp {
             }
             return Ok(false);
         };
+        Ok(self.import_clipboard_image(image))
+    }
+
+    pub(crate) fn import_clipboard_image(&mut self, (w, h, bytes): crate::clipboard_async::Image) -> bool {
+        if w == 0 || h == 0 || bytes.len() != w as usize * h as usize * 4 {
+            return false;
+        }
         let sig = clip_signature(w, h, &bytes);
         if self.os_clip_sig == Some(sig) && self.session.clipboard.is_some() {
-            return Ok(false);
+            return false;
         }
         let r = photocraft_geom::Rect::new(0, 0, w as i32, h as i32);
         let mut surface = photocraft_raster::Surface::from_interleaved(photocraft_color::PixelFormat::RGBA8, r, &bytes);
@@ -78,6 +85,21 @@ impl PhotocraftApp {
         self.os_clip_sig = Some(sig);
         self.clip_external = true;
         self.clip_unmirrored = false;
-        Ok(true)
+        true
+    }
+
+    pub(crate) fn default_paste_params(&self) -> serde_json::Value {
+        let visible = !self.clip_external
+            && self.session.active_index().zip(self.session.clipboard.as_ref()).is_some_and(|(i, clip)| {
+                let v = &self.ui.views[i];
+                let pz = self.point_zoom();
+                let (hw, hh) = (self.last_canvas_rect.width() / 2.0 / pz / self.ui.view.display_aspect(), self.last_canvas_rect.height() / 2.0 / pz);
+                let r = photocraft_geom::Rect::new((v.center[0] - hw) as i32, (v.center[1] - hh) as i32, (v.center[0] + hw) as i32, (v.center[1] + hh) as i32);
+                !clip.bounds.intersect(&r).is_empty()
+            });
+        match self.session.active_index() {
+            Some(i) if !visible => serde_json::json!({"center": self.ui.views[i].center}),
+            _ => serde_json::json!({}),
+        }
     }
 }

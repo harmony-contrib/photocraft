@@ -349,6 +349,9 @@ pub type OsEventsFn = Box<dyn FnMut() -> Vec<OsEvent>>;
 /// Ends the app the platform's own way (see [`Services::quit`]).
 pub type QuitFn = Box<dyn FnMut()>;
 
+/// Test whether saving a path needs an interactive platform grant.
+pub type SaveAuthorizationFn = Box<dyn Fn(&str) -> bool>;
+
 /// Where the OS pointer is now, in egui points within the window; `None` when unknown.
 pub type CursorPosFn = Box<dyn FnMut(&egui::Context) -> Option<egui::Pos2>>;
 
@@ -383,6 +386,8 @@ pub struct Services {
     pub automation_save: Option<SaveFileFn>,
     /// Show an Open or Save dialog without waiting for it (see `file_dialog`).
     pub file_dialog: Option<FileDialogFn>,
+    /// Whether a native save must first ask for directory access (sandboxed platforms).
+    pub save_needs_authorization: Option<SaveAuthorizationFn>,
     /// Write bytes to a path (native) or trigger a download (web).
     pub write: Option<WriteFn>,
     /// Size and modification time of a file (native); `None` on the web, where Save never
@@ -436,6 +441,8 @@ pub struct Services {
     /// True when the last `clipboard_get_image` read had no clipboard to read, as in a Flatpak on
     /// Wayland (#5031), rather than a clipboard that holds no image. `None` where that can't happen.
     pub clipboard_unreadable: Option<ClipboardUnreadableFn>,
+    /// Asynchronous OS image reads (for platforms with a system permission dialog).
+    pub clipboard_read_async: Option<crate::clipboard_async::Read>,
     /// Preferences persistence: the platform config directory on native, browser storage on
     /// the web (see `prefs_ui`).
     pub load_prefs: Option<LoadTextFn>,

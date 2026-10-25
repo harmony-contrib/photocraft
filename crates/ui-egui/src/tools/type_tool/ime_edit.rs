@@ -410,3 +410,140 @@ fn ime_delete_around(app: &mut PhotocraftApp, ed: TextEdit, from: usize, start: 
     remember_incoming(app, None);
     true
 }
+
+/// Update the Type tool's selection from native UTF-16 code-unit offsets (OpenHarmony IMF).
+#[cfg(any(target_env = "ohos", test))]
+pub(super) fn ime_select_utf16(app: &mut PhotocraftApp, start_utf16: usize, end_utf16: usize) -> bool {
+    let Some(ed) = app.ui.text_edit.clone() else { return false };
+    let Some(mut text) = current_text(app, LayerId(ed.layer)) else { return false };
+    if reconcile_preedit(app, &ed, &text) {
+        return false;
+    }
+    let before = ime_committed(app, &ed);
+    if let Some((preedit_start, preedit_len)) = ed.preedit
+        && preedit_len > 0
+    {
+        crate::type_transform::finish(app);
+        if app
+            .run(
+                "type.edit",
+                json!({"layer": ed.layer, "replace": {"start": preedit_start, "end": preedit_start + preedit_len, "text": ""}, "coalesce": ed.session}),
+            )
+            .is_err()
+        {
+            return false;
+        }
+        text = current_text(app, LayerId(ed.layer)).unwrap_or_default();
+    }
+    let mut after_ed = ed;
+    after_ed.anchor = utf16_char_index(&text, start_utf16);
+    after_ed.caret = utf16_char_index(&text, end_utf16);
+    after_ed.preedit = None;
+    app.type_ime.clear_preedit();
+    if let Some(e) = app.ui.text_edit.as_mut() {
+        *e = after_ed.clone();
+    }
+    if let (Some(before), Some(after)) = (before, ime_committed(app, &after_ed)) {
+        note_ime_apply(app, &after_ed, &before, &after);
+    }
+    remember_incoming(app, None);
+    true
+}
+
+/// Delete an active selection or UTF-16 code units around the caret (OpenHarmony IMF).
+#[cfg(any(target_env = "ohos", test))]
+pub(super) fn ime_delete_utf16(app: &mut PhotocraftApp, before_utf16: usize, after_utf16: usize) -> bool {
+    let Some(ed) = app.ui.text_edit.clone() else { return false };
+    let Some(mut text) = current_text(app, LayerId(ed.layer)) else { return false };
+    if reconcile_preedit(app, &ed, &text) {
+        return false;
+    }
+    let before = ime_committed(app, &ed);
+    let (range_start, range_end) = if let Some((preedit_start, preedit_len)) = ed.preedit {
+        if preedit_len > 0 {
+            crate::type_transform::finish(app);
+            if app
+                .run(
+                    "type.edit",
+                    json!({"layer": ed.layer, "replace": {"start": preedit_start, "end": preedit_start + preedit_len, "text": ""}, "coalesce": ed.session}),
+                )
+                .is_err()
+            {
+                return false;
+            }
+            text = current_text(app, LayerId(ed.layer)).unwrap_or_default();
+        }
+        (preedit_start, preedit_start)
+    } else {
+        (ed.caret.min(ed.anchor), ed.caret.max(ed.anchor))
+    };
+    let (start, end) = utf16_delete_range(&text, range_start, range_end, before_utf16, after_utf16);
+    if start < end {
+        crate::type_transform::finish(app);
+        if app.run("type.edit", json!({"layer": ed.layer, "replace": {"start": start, "end": end, "text": ""}, "coalesce": ed.session})).is_err() {
+            return false;
+        }
+    } else if ed.preedit.is_none() {
+        return false;
+    }
+    let mut after_ed = ed;
+    after_ed.caret = start;
+    after_ed.anchor = start;
+    after_ed.preedit = None;
+    app.type_ime.clear_preedit();
+    if let Some(e) = app.ui.text_edit.as_mut() {
+        *e = after_ed.clone();
+    }
+    if let (Some(before), Some(after)) = (before, ime_committed(app, &after_ed)) {
+        note_ime_apply(app, &after_ed, &before, &after);
+    }
+    remember_incoming(app, None);
+    true
+}
+
+// Native IME offsets are UTF-16; the Type tool and engine use Unicode characters.
+#[cfg(any(target_env = "ohos", test))]
+fn utf16_char_index(text: &str, offset: usize) -> usize {
+    let mut units = 0;
+    text.chars()
+        .take_while(|ch| {
+            units += ch.len_utf16();
+            units <= offset
+        })
+        .count()
+}
+
+#[cfg(any(target_env = "ohos", test))]
+fn utf16_delete_range(text: &str, start: usize, end: usize, before: usize, after: usize) -> (usize, usize) {
+    let chars: Vec<_> = text.chars().collect();
+    let (mut start, mut end) = (start.min(chars.len()), end.min(chars.len()));
+    if start == end {
+        let mut units = 0;
+        while start > 0 && units < before {
+            start -= 1;
+            units += chars[start].len_utf16();
+        }
+        units = 0;
+        while end < chars.len() && units < after {
+            units += chars[end].len_utf16();
+            end += 1;
+        }
+    }
+    (start, end)
+}
+
+#[cfg(test)]
+mod ohos_ime_tests {
+    use super::*;
+
+    #[test]
+    fn native_utf16_offsets_keep_surrogate_pairs_whole() {
+        let text = "A😀中文B";
+        assert_eq!(utf16_char_index(text, 2), 1);
+        assert_eq!(utf16_char_index(text, 3), 2);
+        assert_eq!(utf16_delete_range(text, 2, 2, 1, 0), (1, 2));
+        assert_eq!(utf16_delete_range(text, 1, 1, 0, 1), (1, 2));
+        assert_eq!(utf16_delete_range(text, 2, 4, 99, 99), (2, 4));
+        assert_eq!(utf16_delete_range(text, 2, 2, 99, 99), (0, 5));
+    }
+}

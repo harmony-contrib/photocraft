@@ -337,6 +337,7 @@ impl AppLogger {
 
     /// The log file records are written to, once [`AppLogger::attach_dir`] opened one: `None` when
     /// the file could not be created (standard error is the only sink, see [`install`]).
+    #[cfg(any(test, not(target_env = "ohos")))]
     pub fn path(&self) -> Option<PathBuf> {
         self.path.lock().unwrap_or_else(PoisonError::into_inner).clone()
     }

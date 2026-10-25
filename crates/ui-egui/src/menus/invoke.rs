@@ -438,22 +438,12 @@ pub(crate) fn invoke_unguarded(app: &mut PhotocraftApp, ctx: &egui::Context, id:
         "edit.paste" if params.as_object().is_none_or(|o| o.is_empty()) => {
             // Photoshop: paste in place when the copied area is visible, else centred in the view;
             // images from other apps are always centred.
+            if app.services.clipboard_read_async.is_some() {
+                return app.run("edit.paste", json!({}));
+            }
             app.import_os_clipboard()?;
             app.clip_read_for_paste = true;
-            let external = app.clip_external;
-            let visible = !external
-                && app.session.active_index().zip(app.session.clipboard.as_ref()).is_some_and(|(i, clip)| {
-                    let v = &app.ui.views[i];
-                    let pz = app.point_zoom();
-                    let (hw, hh) = (app.last_canvas_rect.width() / 2.0 / pz / app.ui.view.display_aspect(), app.last_canvas_rect.height() / 2.0 / pz);
-                    let r =
-                        photocraft_geom::Rect::new((v.center[0] - hw) as i32, (v.center[1] - hh) as i32, (v.center[0] + hw) as i32, (v.center[1] + hh) as i32);
-                    !clip.bounds.intersect(&r).is_empty()
-                });
-            let p = match app.session.active_index() {
-                Some(i) if !visible => json!({"center": app.ui.views[i].center}),
-                _ => json!({}),
-            };
+            let p = app.default_paste_params();
             app.run("edit.paste", p)
         }
         // Layer › New › Layer… (⇧⌘N) asks first, as in Photoshop; with params it runs as is.

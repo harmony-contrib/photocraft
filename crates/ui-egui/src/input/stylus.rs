@@ -3,6 +3,9 @@
 //!
 //! Sources, by platform (eframe 0.36.2, egui-winit 0.36.2, winit 0.30.13):
 //!
+//! - **OpenHarmony**: winit turns native XComponent/ArkUI stylus and touch events into
+//!   `WindowEvent::Touch` with normalised force (`stylus::stylus_force`); egui-winit forwards it as
+//!   `egui::Event::Touch { force }` alongside the emulated pointer. [`Stylus::update`] reads it.
 //! - **Windows**: winit turns `WM_POINTER` pen and touch input into `WindowEvent::Touch` with a
 //!   normalised force (`POINTER_PEN_INFO::pressure / 1024`); egui-winit forwards it as
 //!   `egui::Event::Touch { force }` alongside the emulated pointer. [`Stylus::update`] reads it.

@@ -579,7 +579,7 @@ pub(crate) fn show(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
     if let Some(panel) = &reveal {
         dock = dock.raise_panel(panel.clone());
     }
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))]
     {
         dock = dock.native_input_hook(native_input_hook(ui.ctx()));
     }
@@ -613,7 +613,7 @@ pub(crate) fn show(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
     if let Some(error) = output.error.take() {
         app.ui.status = error.to_string();
     }
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))]
     open_window_drops(app, ui.ctx(), std::mem::take(&mut output.window_files));
     // Keys pressed in a floating panel's own OS window run the main window's shortcuts.
     let forwarded = std::mem::take(&mut output.forwarded_events);
@@ -656,7 +656,7 @@ pub(crate) fn modal_open(app: &PhotocraftApp, ctx: &egui::Context) -> bool {
 /// The viewports of the floating windows that may have OS windows of their own. Where egui
 /// embeds viewports, and on the web, every floating window stays in the main window.
 pub(crate) fn native_viewports(app: &PhotocraftApp, ctx: &egui::Context) -> Vec<egui::ViewportId> {
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))]
     if !ctx.embed_viewports()
         && let Some(workspace) = &app.ui.docking
     {
@@ -674,7 +674,7 @@ pub(crate) fn native_viewports(app: &PhotocraftApp, ctx: &egui::Context) -> Vec<
 
 /// The main window's `raw_input_hook` rewrites that floating panels' own windows need too:
 /// Ctrl+click is a secondary click on macOS. Each window keeps its own press state.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))]
 fn native_input_hook(ctx: &egui::Context) -> impl FnMut(&egui::Context, &mut egui::RawInput) + Send + 'static {
     type Clicks = std::sync::Arc<std::sync::Mutex<std::collections::HashMap<egui::ViewportId, crate::control_click::ControlClick>>>;
     let clicks = ctx.data_mut(|data| data.get_temp_mut_or_default::<Clicks>(area_id().with("control-click")).clone());
@@ -700,7 +700,7 @@ pub(crate) fn other_window_keyboard(ctx: &egui::Context) -> Option<bool> {
 
 /// Files dropped on a floating panel's own OS window open as documents, as files dropped on the
 /// main window away from the canvas and the tab strip do, and the main window comes forward.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))]
 fn open_window_drops(app: &mut PhotocraftApp, ctx: &egui::Context, windows: Vec<craft_ui::docking::WindowFiles<String>>) {
     let dropped: Vec<egui::DroppedFileHandle> = windows.into_iter().flat_map(|window| window.dropped).collect();
     if !dropped.is_empty() {
@@ -897,7 +897,7 @@ pub(crate) mod probe {
 mod tests;
 
 #[cfg(test)]
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))]
 mod native_tests;
 
 /// Return positions for panels already hidden in a legacy workspace.

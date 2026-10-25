@@ -251,7 +251,7 @@ fn draw_glyph(
 
 /// Font units (scaled to px, y up) → text space for a placed glyph: scales, faux italic,
 /// baseline shift, and the vertical-type orientation.
-fn glyph_xform(layout: &TextLayout, g: &PlacedGlyph, face_skew_deg: f32) -> Xform {
+pub(crate) fn glyph_xform(layout: &TextLayout, g: &PlacedGlyph, face_skew_deg: f32) -> Xform {
     let Some(st) = layout.styles.get(g.style as usize) else { return Xform([1.0, 0.0, 0.0, -1.0, g.x as f64, g.y as f64]) };
     let hs = if st.horizontal_scale > 0.0 { st.horizontal_scale } else { 1.0 } as f64;
     let vs = if st.vertical_scale > 0.0 { st.vertical_scale } else { 1.0 } as f64;
@@ -291,7 +291,7 @@ pub fn layout_warp(layout: &TextLayout, warp: Option<&photocraft_doc::text::Text
 }
 
 /// Colour components in `format`'s model (without alpha).
-fn color_in(format: &PixelFormat, c: &Color) -> Vec<f32> {
+pub(crate) fn color_in(format: &PixelFormat, c: &Color) -> Vec<f32> {
     let n = format.mode.color_channels();
     if c.mode == format.mode {
         c.c[..n].to_vec()
@@ -329,6 +329,7 @@ fn rect_from_bounds([x0, y0, x1, y1]: [f64; 4]) -> Rect {
 pub fn ink_bounds(layout: &TextLayout) -> Option<[f64; 4]> {
     let mut b = Bounds::default();
     draw(layout, &Xform::IDENTITY, &mut b, None, None);
+    crate::bitmap::bounds(layout, &Affine::IDENTITY, None, &mut b);
     b.rect
 }
 
@@ -336,6 +337,7 @@ pub fn ink_bounds(layout: &TextLayout) -> Option<[f64; 4]> {
 pub fn ink_rect_warped(layout: &TextLayout, transform: &Affine, warp: Option<&Warp>) -> Rect {
     let mut b = Bounds::default();
     draw(layout, &Xform(transform.m), &mut b, None, warp);
+    crate::bitmap::bounds(layout, transform, warp, &mut b);
     b.rect.map(rect_from_bounds).unwrap_or(Rect::EMPTY)
 }
 
@@ -368,7 +370,7 @@ pub(crate) fn rasterize_passes(
         return Rendered { surface, rect: Rect::new(0, 0, 0, 0) };
     }
     let colors = visible_color_passes(layout, warp);
-    if colors.is_empty() {
+    if colors.is_empty() && !crate::bitmap::has_visible(layout) {
         return Rendered { surface, rect: Rect::new(0, 0, 0, 0) };
     }
     let n = format.mode.color_channels();
@@ -419,6 +421,7 @@ pub(crate) fn rasterize_passes(
         let a = c.alpha.clamp(0.0, 1.0);
         composite(&mut acc, w, sub, &cov, stride, &comps, a, antialias);
     }
+    crate::bitmap::composite(layout, &xf, warp, &format, w, h, &mut acc);
     // Unpremultiply.
     unpremultiply(&mut acc, n, stride, format.sample);
     surface.write_region_par(rect, &acc);

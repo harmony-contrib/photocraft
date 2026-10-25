@@ -85,8 +85,13 @@ pub fn is_enabled(app: &PhotocraftApp, id: &str) -> bool {
         // An image copied in another app can only be seen by reading the OS clipboard, which happens
         // on an explicit paste: with a clipboard service these stay enabled. Paste and New from
         // Clipboard need no document (with none open, Paste makes one); Paste in Place does.
-        "edit.paste" | "file.newFromClipboard" => app.session.is_enabled(id) || app.services.clipboard_get_image.is_some(),
-        "edit.pasteSpecial.pasteInPlace" => app.session.is_enabled(id) || (app.services.clipboard_get_image.is_some() && app.session.active().is_some()),
+        "edit.paste" | "file.newFromClipboard" => {
+            app.session.is_enabled(id) || app.services.clipboard_get_image.is_some() || app.services.clipboard_read_async.is_some()
+        }
+        "edit.pasteSpecial.pasteInPlace" => {
+            app.session.is_enabled(id)
+                || ((app.services.clipboard_get_image.is_some() || app.services.clipboard_read_async.is_some()) && app.session.active().is_some())
+        }
         "select.selectAndMask" => app.session.is_enabled("select.refineEdge"),
         "type.editText" => app
             .session

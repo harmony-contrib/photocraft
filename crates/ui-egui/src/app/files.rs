@@ -175,6 +175,16 @@ impl PhotocraftApp {
             return Ok(serde_json::json!({"path": "smart object", "warnings": []}));
         }
         if let Some(path) = path {
+            if self.services.save_needs_authorization.as_ref().is_some_and(|needs| needs(&path)) {
+                let doc = self.active_doc_id()?;
+                self.ui.status = format!("Select the containing folder to allow safe saves: {path}");
+                return self.ask_file(crate::FileDialogRequest::AuthorizeSave { path: path.clone() }, move |app, answer| {
+                    if answer != crate::FileDialogAnswer::SaveTo(path.clone()) {
+                        return Err("save authorization returned a different file".into());
+                    }
+                    app.with_document(doc, |app| app.save_to(path, choices))
+                });
+            }
             return self.save_to(path, choices);
         }
         let st = self.session.active().ok_or("no document")?;
@@ -264,6 +274,20 @@ impl PhotocraftApp {
         if self.save_options_open() {
             return Err(SAVE_OPTIONS_OPEN.into());
         }
+        if self.services.save_needs_authorization.as_ref().is_some_and(|needs| needs(&path)) {
+            let doc = self.active_doc_id()?;
+            self.ui.status = format!("Select the containing folder to allow safe saves: {path}");
+            return self.ask_file(crate::FileDialogRequest::AuthorizeSave { path: path.clone() }, move |app, answer| {
+                if answer != crate::FileDialogAnswer::SaveTo(path.clone()) {
+                    return Err("save authorization returned a different file".into());
+                }
+                app.with_document(doc, |app| app.save_in_place_authorized(path, choices))
+            });
+        }
+        self.save_in_place_authorized(path, choices)
+    }
+
+    fn save_in_place_authorized(&mut self, path: String, choices: FormatChoices) -> Result<Value, String> {
         let r = self.write_save(path, None, choices)?;
         // JPEG Options are recorded only where they change something
         // ([`jpeg_options_ui::plain_save_step`]); the Targa and DDS answers as given.

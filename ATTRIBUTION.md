@@ -148,3 +148,16 @@ are adapted from Skyfuller1303’s MIT OR Apache-2.0 implementation in
 `897f20072762fdf0eb688adcdb8d8cda7b38ce66`. Don Omondi’s embedded AI/PDF/EPS
 extension and current-main integration build on that source. Clipboard and unrelated
 Shape Tools changes from that branch are not included.
+
+## OpenHarmony dependencies
+
+The OpenHarmony build integrates the `feat-openharmony` branches of `egui` (`0.37.0`)
+and `winit` (`0.30.13`) together with `openharmony-ability` (`e2c84435`).
+
+| Dependency | Title | Author | Source | License |
+| --- | --- | --- | --- | --- |
+| `egui`, `eframe`, `egui-winit`, `egui-wgpu`, `egui_glow` | egui and native integrations (`feat-openharmony`) | egui contributors | [emilk/egui](https://github.com/emilk/egui) | MIT OR Apache-2.0 |
+| `winit`, `dpi` | OpenHarmony winit `0.30.13` backend (`feat-openharmony`) | winit and ohos-rs contributors | [rust-windowing/winit](https://github.com/rust-windowing/winit) | Apache-2.0 |
+| `glutin`, `glutin-winit` | glutin window integration | glutin contributors | [rust-windowing/glutin](https://github.com/rust-windowing/glutin) | MIT |
+| `openharmony-ability` | Native Ability and platform plugins | ohos-rs contributors | [harmony-contrib/openharmony-ability](https://github.com/harmony-contrib/openharmony-ability) | MIT OR Apache-2.0 |
+| `ohos-native-bindings` | Native ArkUI and XComponent bindings | ohos-rs contributors | [ohos-rs/ohos-native-bindings](https://github.com/ohos-rs/ohos-native-bindings) | MIT OR Apache-2.0 |

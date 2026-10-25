@@ -19,6 +19,7 @@ photocraft-psd = { workspace = true }
 # directories ourselves (native) and always register the bundled fonts (native + web).
 parley = { version = "0.11", default-features = false, features = ["std"] }
 skrifa = "0.44"
+png = "0.18"
 flate2 = { workspace = true }
 
 # ICU dictionary data for Japanese word boundaries and complex-script (Thai, Lao, Khmer, Burmese)

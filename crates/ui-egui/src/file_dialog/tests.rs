@@ -1484,3 +1484,60 @@ fn import_variable_data_sets_menu_asks_for_a_csv_and_imports_it() {
     app.poll_file_dialog(&ctx, None);
     assert_eq!(app.session.active().map(|d| d.doc.variables.data_sets.len()), Some(2));
 }
+
+#[test]
+fn platform_errors_reach_the_waiting_action_and_status() {
+    let (mut app, open, written) = app();
+    let ctx = egui::Context::default();
+    menus::invoke(&mut app, &ctx, "file.saveAs", json!({})).unwrap();
+    let completed = Rc::new(RefCell::new(None));
+    let received = completed.clone();
+    assert!(app.after_file_dialog(move |_, result| {
+        *received.borrow_mut() = Some(result.clone());
+        result
+    }));
+    app.poll_file_dialog(&ctx, None);
+    let (_, reply) = open.borrow_mut().pop().unwrap();
+    reply.send_error("file permission denied");
+    app.poll_file_dialog(&ctx, None);
+    assert_eq!(completed.borrow().as_ref().unwrap().as_ref().unwrap_err(), "file permission denied");
+    assert!(app.ui.status_error);
+    assert!(written.borrow().is_empty());
+    assert!(!app.file_dialog_open());
+}
+
+#[test]
+fn save_authorization_is_async_and_bound_to_the_original_document() {
+    let (mut app, open, written) = app();
+    let ctx = egui::Context::default();
+    app.services.save_needs_authorization = Some(Box::new(|_| true));
+    let original = app.active_doc_id().unwrap();
+    app.save_as(Some("/documents/drawing.pcraft".into())).unwrap();
+    app.poll_file_dialog(&ctx, None);
+    assert!(matches!(open.borrow().as_slice(), [(FileDialogRequest::AuthorizeSave { .. }, _)]));
+    assert!(written.borrow().is_empty());
+    app.run("file.new", json!({"width": 8, "height": 8})).unwrap();
+    let second = app.active_doc_id().unwrap();
+    answer(&open, Some(FileDialogAnswer::SaveTo("/documents/drawing.pcraft".into())));
+    app.poll_file_dialog(&ctx, None);
+    let saved = app.session.documents().iter().find(|s| s.doc.id == original).unwrap();
+    assert_eq!(saved.path.as_deref(), Some("/documents/drawing.pcraft"));
+    assert_eq!(app.active_doc_id().unwrap(), second);
+    assert!(app.session.active().unwrap().path.is_none());
+    assert_eq!(*written.borrow(), ["/documents/drawing.pcraft"]);
+}
+
+#[test]
+fn cancelled_or_misdirected_save_authorization_never_writes() {
+    for response in [None, Some(FileDialogAnswer::SaveTo("/different.pcraft".into()))] {
+        let (mut app, open, written) = app();
+        let ctx = egui::Context::default();
+        app.services.save_needs_authorization = Some(Box::new(|_| true));
+        app.save_as(Some("/documents/drawing.pcraft".into())).unwrap();
+        app.poll_file_dialog(&ctx, None);
+        answer(&open, response);
+        app.poll_file_dialog(&ctx, None);
+        assert!(written.borrow().is_empty());
+        assert!(app.session.active().unwrap().path.is_none());
+    }
+}

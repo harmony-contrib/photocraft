@@ -146,6 +146,7 @@ impl PhotocraftApp {
             clip_unmirrored: true,
             clip_external: false,
             clip_read_for_paste: false,
+            pending_clipboard: None,
             smart_svg: Default::default(),
             transform_preview: None,
             move_mods: Default::default(),

@@ -7,6 +7,8 @@ use super::ime::{
     reset_route_eligible, suspend_reset, sync_incoming,
 };
 use super::ime_edit::{ime_delete_bytes, ime_delete_chars, ime_update};
+#[cfg(target_env = "ohos")]
+use super::ime_edit::{ime_delete_utf16, ime_select_utf16};
 use super::layout::layout;
 use super::pointer::word_boundary;
 use super::{LayerId, PhotocraftApp, byte_of, current_text, json, text_char_count, text_layer};
@@ -156,6 +158,14 @@ pub fn handle_keys(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
                     egui::ImeEvent::Commit(s) => {
                         ime_update(app, s, true);
                         app.type_ime.incoming = None;
+                    }
+                    #[cfg(target_env = "ohos")]
+                    egui::ImeEvent::Selection { start, end } => {
+                        ime_select_utf16(app, *start, *end);
+                    }
+                    #[cfg(target_env = "ohos")]
+                    egui::ImeEvent::DeleteSurroundingUtf16 { before, after } => {
+                        ime_delete_utf16(app, *before, *after);
                     }
                     egui::ImeEvent::DeleteSurrounding { before_chars, after_chars } => {
                         ime_delete_chars(app, *before_chars, *after_chars);

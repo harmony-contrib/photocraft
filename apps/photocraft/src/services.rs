@@ -3,10 +3,16 @@
 use photocraft_codecs::{ChannelLayout, EncodeOptions, Image};
 use photocraft_doc::Document;
 use photocraft_format::RecoveryStore;
-use photocraft_ui_egui::{FileDialogAnswer, FileDialogReply, FileDialogRequest, Recoverable, Services};
-use std::cell::{Cell, RefCell};
+#[cfg(not(target_env = "ohos"))]
+use photocraft_ui_egui::{FileDialogAnswer, FileDialogReply, FileDialogRequest};
+use photocraft_ui_egui::{Recoverable, Services};
+#[cfg(not(target_env = "ohos"))]
+use std::cell::Cell;
+use std::cell::RefCell;
+#[cfg(not(target_env = "ohos"))]
 use std::future::Future;
 use std::path::{Path, PathBuf};
+#[cfg(not(target_env = "ohos"))]
 use std::pin::Pin;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -17,18 +23,20 @@ mod recovery_tests;
 /// Everything File › Open reads: PhotoCraft, Photoshop, OpenRaster, Krita and Affinity documents, flat images, and
 /// Photoshop brushes (.abr), gradients (.grd), layer styles (.asl), swatches (.aco, .act, .ase) and keyboard shortcut sets
 /// (.kys), which go to the preset libraries and Edit › Keyboard Shortcuts.
-const OPEN_EXTS: &[&str] = &[
+pub(super) const OPEN_EXTS: &[&str] = &[
     "pcraft", "pdn", "ora", "xcf", "xcfgz", "gz", "kra", "krz", "psd", "psb", "psdt", "png", "jpg", "jpeg", "tif", "tiff", "webp", "gif", "bmp", "dib", "tga",
     "ico", "qoi", "exr", "hdr", "pbm", "pgm", "ppm", "pnm", "pam", "pfm", "pcx", "dds", "xpm", "fits", "fit", "fts", "dpx", "cin", "dcm", "dicom", "dc3",
     "iff", "lbm", "ilbm", "heic", "heif", "hif", "dng", "cr2", "cr3", "nef", "nrw", "arw", "pef", "orf", "rw2", "raf", "abr", "grd", "asl", "svg", "svgz",
     "aco", "act", "ase", "kys", "af", "afdesign", "afphoto", "afpub",
 ];
+#[cfg(not(target_env = "ohos"))]
 const SVG_EXTS: &[&str] = &["svg", "svgz"];
 
 /// Open dialog extensions that also match uppercase and mixed-case names (`IMG_0001.JPG`).
 /// On Linux and the BSDs rfd turns each extension into a case-sensitive `*.ext` glob for the XDG
 /// portal or zenity, so every letter becomes a character class, as the portal spec suggests
 /// (`*.[iI][cC][oO]`). Windows and macOS take literal extensions and ignore case already.
+#[cfg(not(target_env = "ohos"))]
 fn open_filter_extensions(extensions: &[&str]) -> Vec<String> {
     let case_sensitive_globs = cfg!(all(unix, not(target_os = "macos")));
     let class = |c: char| if c.is_ascii_alphabetic() { format!("[{}{}]", c.to_ascii_lowercase(), c.to_ascii_uppercase()) } else { c.to_string() };
@@ -39,6 +47,7 @@ fn open_filter_extensions(extensions: &[&str]) -> Vec<String> {
 /// of mixed files can be narrowed to one kind (#6337). Together they cover every extension of
 /// [`OPEN_EXTS`]. An explicit SVG filter also keeps vector artwork discoverable when a native
 /// picker defaults to another filter.
+#[cfg(not(target_env = "ohos"))]
 const OPEN_FILTERS: &[(&str, &[&str])] = &[
     ("PhotoCraft", &["pcraft"]),
     ("Photoshop", &["psd", "psb", "psdt"]),
@@ -76,6 +85,7 @@ const OPEN_FILTERS: &[(&str, &[&str])] = &[
     ("Keyboard Shortcuts", &["kys"]),
 ];
 
+#[cfg(not(target_env = "ohos"))]
 fn open_filters() -> Vec<(&'static str, Vec<String>)> {
     std::iter::once(("All Formats", open_filter_extensions(OPEN_EXTS)))
         .chain(OPEN_FILTERS.iter().map(|(name, exts)| (*name, open_filter_extensions(exts))))
@@ -120,14 +130,14 @@ const OTHER_SAVE_FILTERS: &[(&str, &[&str])] = &[("Color Swatches", &["aco"]), (
 /// `suggested` with a Netpbm subtype's extension (an opened .pgm) as the neutral .pnm, the name
 /// every save dialog starts from: the encoder picks P5, P6, P7 or PFM from the image, so the old
 /// suffix could name other data, and macOS and rfd keep the suggested name as it is.
-fn netpbm_as_pnm(suggested: &str) -> String {
+pub(super) fn netpbm_as_pnm(suggested: &str) -> String {
     let path = Path::new(suggested);
     let subtype = path.extension().map(|e| e.to_string_lossy().to_ascii_lowercase()).is_some_and(|e| ["pbm", "pgm", "ppm", "pam", "pfm"].contains(&e.as_str()));
     if subtype { path.with_extension("pnm").to_string_lossy().into_owned() } else { suggested.to_string() }
 }
 
 /// Lists the save dialog's file types with the `suggested` type first (added if unlisted), so the dialog keeps that extension instead of .psd.
-fn save_filters(suggested: &str) -> Vec<(String, Vec<String>)> {
+pub(super) fn save_filters(suggested: &str) -> Vec<(String, Vec<String>)> {
     let ext = Path::new(suggested).extension().map(|e| e.to_string_lossy().to_ascii_lowercase()).unwrap_or_default();
     // A Netpbm subtype's name (an opened .pgm) starts on the Netpbm type as .pnm: the encoder picks
     // the subtype from the image, so the old name could describe other data (CodeRabbit on #9775).
@@ -158,7 +168,7 @@ fn save_filters(suggested: &str) -> Vec<(String, Vec<String>)> {
 /// (`art.png` with the PSD type untouched, the way to save a PNG before this) is theirs and stays,
 /// and so does one of the type's own (`.psb` for PSD). One PhotoCraft doesn't save (`scan.2024`)
 /// is part of the name, and the type's extension is added after it.
-#[cfg(any(target_os = "linux", test))]
+#[cfg(any(all(target_os = "linux", not(target_env = "ohos")), test))]
 pub(crate) fn with_chosen_type(path: &Path, opened_with: Option<&str>, chosen: &[String]) -> PathBuf {
     let Some(first) = chosen.first() else { return path.to_path_buf() };
     let ext = path.extension().and_then(|e| e.to_str()).map(str::to_ascii_lowercase);
@@ -190,6 +200,7 @@ pub(crate) fn with_chosen_type(path: &Path, opened_with: Option<&str>, chosen: &
 /// A stem that still has a dot (`scan.jpg.psd`: Windows could keep `scan.jpg`) or an upper-case
 /// extension (the user's spelling) keeps the whole name. Elsewhere the whole name is kept: the
 /// macOS panel has no type list, and rfd's Linux dialogs don't say which type was picked.
+#[cfg(not(target_env = "ohos"))]
 fn dialog_file_name(suggested: &str, adds_extension: bool) -> Option<String> {
     let path = Path::new(suggested);
     let name = path.file_name()?.to_string_lossy().into_owned();
@@ -201,12 +212,14 @@ fn dialog_file_name(suggested: &str, adds_extension: bool) -> Option<String> {
 /// Shows an Open or Save dialog without blocking the event loop (#673, #574): rfd's async dialog
 /// is created here, on the main thread, with the window as its parent (a sheet on macOS, an owned
 /// modal window elsewhere), and a helper thread waits for it and hands the answer to the app.
+#[cfg(not(target_env = "ohos"))]
 fn show_file_dialog(request: FileDialogRequest, parent: Option<&eframe::Frame>, reply: FileDialogReply) {
     let mut dialog = rfd::AsyncFileDialog::new();
     if let Some(parent) = parent {
         dialog = dialog.set_parent(parent);
     }
     let answer: Pin<Box<dyn Future<Output = Option<FileDialogAnswer>> + Send>> = match request {
+        FileDialogRequest::AuthorizeSave { path } => Box::pin(async move { Some(FileDialogAnswer::SaveTo(path)) }),
         FileDialogRequest::Open { multiple, initial_dir, extensions } => {
             if let Some(dir) = initial_dir {
                 dialog = dialog.set_directory(dir);
@@ -248,7 +261,7 @@ fn show_file_dialog(request: FileDialogRequest, parent: Option<&eframe::Frame>, 
             }
             // On Linux the portal's own dialog, which reports the file type picked (#6121); rfd if
             // the portal can't show it.
-            #[cfg(target_os = "linux")]
+            #[cfg(all(target_os = "linux", not(target_env = "ohos")))]
             {
                 use eframe::wgpu::rwh::HasWindowHandle;
                 let parent = crate::portal_save::parent_id(parent.and_then(|p| p.window_handle().ok()).map(|h| h.as_raw()));
@@ -274,7 +287,7 @@ fn show_file_dialog(request: FileDialogRequest, parent: Option<&eframe::Frame>, 
                     }
                 })
             }
-            #[cfg(not(target_os = "linux"))]
+            #[cfg(not(all(target_os = "linux", not(target_env = "ohos"))))]
             {
                 let _ = filters;
                 let picked = dialog.save_file();
@@ -295,6 +308,7 @@ fn show_file_dialog(request: FileDialogRequest, parent: Option<&eframe::Frame>, 
 /// The dialog's answer for the chosen `paths`, or the error for one whose name isn't valid
 /// Unicode, which a lossy copy would turn into another file's name (#6601). `saving`: the paths
 /// are to be written to.
+#[cfg(not(target_env = "ohos"))]
 fn answer<'a>(paths: impl IntoIterator<Item = &'a Path>, saving: bool, make: impl FnOnce(Vec<String>) -> FileDialogAnswer) -> FileDialogAnswer {
     match paths.into_iter().map(|p| photocraft_ui_egui::file_open::path_text(p, saving)).collect() {
         Ok(paths) => make(paths),
@@ -303,6 +317,7 @@ fn answer<'a>(paths: impl IntoIterator<Item = &'a Path>, saving: bool, make: imp
 }
 
 /// [`answer`] for a dialog that picks one path.
+#[cfg(not(target_env = "ohos"))]
 fn answer_one(path: &Path, saving: bool, make: impl FnOnce(String) -> FileDialogAnswer) -> FileDialogAnswer {
     match photocraft_ui_egui::file_open::path_text(path, saving) {
         Ok(path) => make(path),
@@ -311,6 +326,7 @@ fn answer_one(path: &Path, saving: bool, make: impl FnOnce(String) -> FileDialog
 }
 
 /// Runs `future` to completion on this thread, sleeping until it is woken.
+#[cfg(not(target_env = "ohos"))]
 pub(crate) fn block_on<T>(future: impl Future<Output = T>) -> T {
     struct Unpark(std::thread::Thread);
     impl std::task::Wake for Unpark {
@@ -493,10 +509,12 @@ fn recovery_services(dir: Option<PathBuf>) -> Services {
 /// The OS clipboard read and write run under the crash guard, like Open and Export (#7582): a
 /// panic in arboard, or in decoding a copied file, becomes the paste's (or copy's) error and the
 /// app keeps its documents.
+#[cfg(not(target_env = "ohos"))]
 fn guarded_clipboard_get(mut read: impl FnMut() -> Result<Option<(u32, u32, Vec<u8>)>, String> + 'static) -> photocraft_ui_egui::ClipboardGetFn {
     Box::new(move || crate::crash_guard::guard("Paste", &mut read))
 }
 
+#[cfg(not(target_env = "ohos"))]
 fn guarded_clipboard_set(mut write: impl FnMut(u32, u32, &[u8]) -> Result<(), String> + 'static) -> photocraft_ui_egui::ClipboardSetFn {
     Box::new(move |w: u32, h: u32, px: &[u8]| crate::crash_guard::guard("Copy", || write(w, h, px)))
 }
@@ -504,6 +522,7 @@ fn guarded_clipboard_set(mut write: impl FnMut(u32, u32, &[u8]) -> Result<(), St
 /// The pixels to paste when the clipboard holds copied files rather than an image (Copy in
 /// Files, Finder or Explorer puts paths on the clipboard, #338): the first file that decodes,
 /// upright, as RGBA8. Files that aren't images are skipped after reading only their header.
+#[cfg(not(target_env = "ohos"))]
 fn image_from_files(paths: &[PathBuf]) -> Option<(u32, u32, Vec<u8>)> {
     use std::io::Read;
     paths.iter().find_map(|path| {
@@ -526,14 +545,14 @@ fn image_from_files(paths: &[PathBuf]) -> Option<(u32, u32, Vec<u8>)> {
 
 /// Largest clipboard image payload read on Wayland (1 GiB, a 16K × 16K RGBA BMP), so no real
 /// screenshot is turned away, while a broken or hostile source can't make us allocate without end.
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(target_env = "ohos")))]
 const MAX_CLIPBOARD_IMAGE_BYTES: u64 = 4 * 16384 * 16384;
 
 /// The clipboard image arboard can't read on Wayland (#2546): arboard 3.6 asks for `image/png`
 /// only, so a screenshot tool or clipboard manager that offers just `image/jpeg`, `image/bmp` or
 /// `image/webp` pasted nothing. Reads the other `image/*` types through the same data-control
 /// protocol arboard uses, and decodes them with our own codecs. `None` off Wayland.
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(target_env = "ohos")))]
 fn wayland_clipboard_image() -> Option<(u32, u32, Vec<u8>)> {
     use std::io::Read;
     use wl_clipboard_rs::paste::{ClipboardType, MimeType, Seat, get_contents, get_mime_types_ordered};
@@ -548,7 +567,7 @@ fn wayland_clipboard_image() -> Option<(u32, u32, Vec<u8>)> {
 
 /// The first clipboard offer, in the source's order, that `fetch` returns as a decodable image,
 /// upright as RGBA8. Only `image/*` types are fetched, so text offers are never transferred.
-#[cfg(any(target_os = "linux", test))]
+#[cfg(any(all(target_os = "linux", not(target_env = "ohos")), test))]
 fn image_from_offers(offers: &[String], mut fetch: impl FnMut(&str) -> Option<Vec<u8>>) -> Option<(u32, u32, Vec<u8>)> {
     offers.iter().filter(|mime| mime.starts_with("image/")).find_map(|mime| {
         let bytes = fetch(mime)?;
@@ -563,12 +582,14 @@ fn image_from_offers(offers: &[String], mut fetch: impl FnMut(&str) -> Option<Ve
 
 /// Largest SVG markup a paste reads from clipboard text (128 MiB, the size an `.svgz` may inflate
 /// to).
+#[cfg(not(target_env = "ohos"))]
 const MAX_CLIPBOARD_SVG_BYTES: u64 = photocraft_io::svg::MAX_INFLATED_BYTES;
 
 /// The pixels of a drawing copied as SVG markup (on macOS and Linux, VectorCraft's Copy leaves
 /// only the markup, as text): one pixel per SVG unit, scaled down to the SVG import's pixel limit,
 /// as RGBA8. `None` for text that isn't SVG, markup longer than [`MAX_CLIPBOARD_SVG_BYTES`], and
 /// markup that doesn't parse.
+#[cfg(not(target_env = "ohos"))]
 fn image_from_svg_text(text: &str) -> Option<(u32, u32, Vec<u8>)> {
     if u64::try_from(text.len()).ok()? > MAX_CLIPBOARD_SVG_BYTES || !text.trim_start_matches('\u{feff}').trim_start().starts_with('<') {
         return None;
@@ -581,6 +602,7 @@ fn image_from_svg_text(text: &str) -> Option<(u32, u32, Vec<u8>)> {
 /// paste instead of the file), the clipboard's image, then a drawing copied as SVG markup. Each
 /// read runs only when the ones before it found nothing. A read that fails, such as one of a busy
 /// clipboard, returns its error, and the reads after it don't run.
+#[cfg(not(target_env = "ohos"))]
 fn clipboard_image<C>(
     clipboard: &mut C,
     files: impl FnOnce(&mut C) -> Result<Option<Vec<PathBuf>>, String>,
@@ -599,6 +621,7 @@ fn clipboard_image<C>(
 /// One OS clipboard read as [`clipboard_image`] takes it: no content in the format asked for is
 /// `None`, and any other failure, such as a busy clipboard or a broken pipe on Wayland, is the
 /// read's error.
+#[cfg(not(target_env = "ohos"))]
 fn clipboard_read<T>(read: Result<T, arboard::Error>) -> Result<Option<T>, String> {
     match read {
         Ok(value) => Ok(Some(value)),
@@ -609,6 +632,7 @@ fn clipboard_read<T>(read: Result<T, arboard::Error>) -> Result<Option<T>, Strin
 
 /// Clipboard text as [`clipboard_image`] takes it: like [`clipboard_read`], except that text that
 /// isn't UTF-8 is `None`, like other text that isn't SVG markup.
+#[cfg(not(target_env = "ohos"))]
 fn clipboard_text(read: Result<String, arboard::Error>) -> Result<Option<String>, String> {
     match read {
         Err(arboard::Error::ConversionFailure) => Ok(None),
@@ -621,6 +645,7 @@ fn clipboard_text(read: Result<String, arboard::Error>) -> Result<Option<String>
 /// one, an AppImage relaunches by its own path, and anything else is `photocraft` on the PATH.
 /// `None` outside Flatpak when there is no X server (`DISPLAY` unset) to run on.
 #[cfg(any(target_os = "linux", test))]
+#[cfg(not(target_env = "ohos"))]
 pub fn xwayland_command(flatpak_id: Option<&str>, appimage: Option<&str>, x_display: bool) -> Option<String> {
     if let Some(id) = flatpak_id.filter(|id| !id.is_empty()) {
         return Some(format!("flatpak run --nosocket=wayland --socket=x11 {}", shell_word(id)));
@@ -631,12 +656,15 @@ pub fn xwayland_command(flatpak_id: Option<&str>, appimage: Option<&str>, x_disp
 
 /// `s` as one POSIX shell word: bare when every character is safe there, else single-quoted.
 #[cfg(any(target_os = "linux", test))]
+#[cfg(not(target_env = "ohos"))]
 fn shell_word(s: &str) -> String {
     if s.bytes().all(|b| b.is_ascii_alphanumeric() || b"/._-+:,@".contains(&b)) { s.to_string() } else { format!("'{}'", s.replace('\'', r"'\''")) }
 }
 
 pub fn native(automation: Option<photocraft_automation::AuthorizedWorkspace>) -> Services {
+    #[cfg(not(target_env = "ohos"))]
     let clip: Rc<RefCell<Option<arboard::Clipboard>>> = Rc::default();
+    #[cfg(not(target_env = "ohos"))]
     let clip_unreadable: Rc<Cell<bool>> = Rc::default();
     let automation_read = automation.clone().map(|workspace| {
         Box::new(move |path: &str| {
@@ -678,6 +706,7 @@ pub fn native(automation: Option<photocraft_automation::AuthorizedWorkspace>) ->
             crate::crash_guard::guard("Export", || photocraft_io::export(doc, path, &opts).map(|r| (r.bytes, r.warnings)).map_err(|e| e.to_string()))
         })),
         save_file: Some(Arc::new(save_file)),
+        #[cfg(not(target_env = "ohos"))]
         file_dialog: Some(Box::new(show_file_dialog)),
         write: Some(Box::new(|path: &str, bytes: &[u8]| write_atomic(Path::new(path), bytes))),
         file_stamp: Some(Box::new(|path: &str| {
@@ -697,9 +726,13 @@ pub fn native(automation: Option<photocraft_automation::AuthorizedWorkspace>) ->
             photocraft_codecs::encode(&img, photocraft_codecs::Format::Png, &EncodeOptions::default()).map_err(|e| e.to_string())
         })),
         inbox: None,
+        #[cfg(not(target_env = "ohos"))]
         open_url: Some(Box::new(|url: &str| open::that(url).map_err(|e| e.to_string()))),
+        #[cfg(not(target_env = "ohos"))]
         beep: Some(platform_beep),
+        #[cfg(not(target_env = "ohos"))]
         check_updates: Some(crate::updates::service()),
+        #[cfg(not(target_env = "ohos"))]
         clipboard_set_image: Some({
             let clip = clip.clone();
             guarded_clipboard_set(move |w: u32, h: u32, px: &[u8]| {
@@ -711,7 +744,9 @@ pub fn native(automation: Option<photocraft_automation::AuthorizedWorkspace>) ->
                 cb.set_image(arboard::ImageData { width: w as usize, height: h as usize, bytes: std::borrow::Cow::Borrowed(px) }).map_err(|e| e.to_string())
             })
         }),
+        #[cfg(not(target_env = "ohos"))]
         open_external_svg: Some(Box::new(crate::external_svg::open)),
+        #[cfg(not(target_env = "ohos"))]
         clipboard_get_image: Some({
             let clip = clip.clone();
             let unreadable = clip_unreadable.clone();
@@ -734,7 +769,7 @@ pub fn native(automation: Option<photocraft_automation::AuthorizedWorkspace>) ->
                     |cb| match cb.get_image() {
                         Ok(img) => Ok(Some((img.width as u32, img.height as u32, img.bytes.into_owned()))),
                         Err(error) => {
-                            #[cfg(target_os = "linux")]
+                            #[cfg(all(target_os = "linux", not(target_env = "ohos")))]
                             if let Some(image) = wayland_clipboard_image() {
                                 return Ok(Some(image));
                             }
@@ -748,10 +783,13 @@ pub fn native(automation: Option<photocraft_automation::AuthorizedWorkspace>) ->
                 )
             })
         }),
+        #[cfg(not(target_env = "ohos"))]
         clipboard_unreadable: Some(Box::new(move || clip_unreadable.get())),
         load_prefs: Some(Box::new(|| std::fs::read_to_string(prefs_file()?).ok())),
+        #[cfg(not(target_env = "ohos"))]
         photoshop_shortcuts: Some(Box::new(|| crate::photoshop_settings::live_keyboard_shortcuts(&|k| std::env::var_os(k)))),
         save_prefs: Some(Box::new(|text: &str| write_atomic(&prefs_file().ok_or("no config directory")?, text.as_bytes()))),
+        #[cfg(not(target_env = "ohos"))]
         system_theme: crate::appearance::service(),
         append_text: Some(Box::new(|path: &str, text: &str| {
             use std::io::Write;
@@ -768,6 +806,7 @@ pub fn native(automation: Option<photocraft_automation::AuthorizedWorkspace>) ->
 }
 
 /// Preferences ▸ General ▸ Beep When Done: the platform's default information beep.
+#[cfg(not(target_env = "ohos"))]
 fn platform_beep() {
     #[cfg(target_os = "windows")]
     {

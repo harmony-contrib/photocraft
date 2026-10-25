@@ -5,27 +5,28 @@ use serde_json::Value;
 
 use crate::PhotocraftApp;
 
+#[cfg_attr(any(target_arch = "wasm32", target_env = "ohos"), derive(Default))]
 pub(crate) struct Runtime {
     startup_checked: bool,
     notified_version: Option<String>,
     /// The startup prompt and the self-update behind it (desktop).
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))]
     updater: craft_update::updater::Updater,
 }
 
+#[cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))]
 impl Default for Runtime {
     fn default() -> Self {
         Self {
             startup_checked: false,
             notified_version: None,
-            #[cfg(not(target_arch = "wasm32"))]
             updater: craft_update::updater::Updater::new(&crate::UPDATE_APP, photocraft_engine::build_info::VERSION),
         }
     }
 }
 
 /// The release the engine found, as `craft-update` knows it.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))]
 fn release_of(found: &photocraft_engine::updates_cmds::Release) -> craft_update::Release {
     craft_update::Release {
         tag: format!("v{}", found.version),
@@ -63,7 +64,7 @@ pub(crate) fn tick(app: &mut PhotocraftApp, ctx: &egui::Context) {
     {
         app.updates_rt.notified_version = Some(release.version.clone());
         app.ui.updates_open = true;
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))]
         app.updates_rt.updater.offer(release_of(release));
     }
     if app.session.updates.check.is_none() {
@@ -80,10 +81,10 @@ pub(crate) fn tick(app: &mut PhotocraftApp, ctx: &egui::Context) {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(target_arch = "wasm32", target_env = "ohos"))]
 pub(crate) fn show(_app: &mut PhotocraftApp, _ctx: &egui::Context) {}
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))]
 pub(crate) fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
     let mut download: Option<String> = None;
     {
@@ -122,7 +123,7 @@ pub(crate) fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
 
 /// The engine's check state as the result dialog shows it. An available release goes to the
 /// startup prompt, so the dialog draws nothing for it.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))]
 fn check_status(status: &Status) -> craft_update::updater::Status {
     use craft_update::updater::Status as Shown;
     match status {
@@ -247,7 +248,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))]
     fn startup_update_prompt_appears_and_can_be_dismissed() {
         let (mut app, _, sender) = app();
         let ctx = egui::Context::default();

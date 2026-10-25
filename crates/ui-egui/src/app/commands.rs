@@ -86,6 +86,9 @@ impl PhotocraftApp {
         // The OS clipboard is read only on an explicit paste, never in the background (privacy, CPU).
         if matches!(id, "edit.paste" | "edit.pasteSpecial.pasteInPlace" | "file.newFromClipboard") {
             if !clip_read {
+                if let Some(result) = crate::clipboard_async::begin(self, id, &params) {
+                    return result;
+                }
                 self.import_os_clipboard()?;
             }
             if self.session.clipboard.is_none() && self.services.clipboard_get_image.is_some() {

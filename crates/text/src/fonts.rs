@@ -112,7 +112,7 @@ pub const INDIC_FAMILIES: &[&[&str]] = &[
 ];
 /// Broad-coverage and emoji fonts, tried after the CJK script fonts so shared Han characters get
 /// the locale's forms instead of Arial Unicode's.
-const FALLBACK_LAST: &[&str] = &["Arial Unicode MS", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"];
+const FALLBACK_LAST: &[&str] = &["Arial Unicode MS", "HMOS Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"];
 
 /// Every fallback family candidate, CJK ordered for `order` (see [`crate::cjk::script_order`]).
 pub fn fallback_candidates(order: &[crate::cjk::CjkScript; 4]) -> Vec<&'static str> {
@@ -877,6 +877,9 @@ pub(crate) fn collect_font_files(dir: &std::path::Path, depth: u32, out: &mut Ve
 /// installed or Fontconfig cannot enumerate fonts.
 #[cfg(all(target_os = "linux", not(target_arch = "wasm32")))]
 fn fontconfig_font_paths() -> Vec<std::path::PathBuf> {
+    if cfg!(target_env = "ohos") {
+        return Vec::new();
+    }
     let Ok(output) = std::process::Command::new("fc-list").arg("--format=%{file}\\n").output() else {
         return Vec::new();
     };
@@ -974,6 +977,8 @@ pub(crate) fn system_font_dirs() -> Vec<std::path::PathBuf> {
         if let Some(h) = &home {
             v.push(h.join("Library/Fonts"));
         }
+    } else if cfg!(target_env = "ohos") {
+        v.push(PathBuf::from("/system/fonts"));
     } else if cfg!(target_os = "windows") {
         let windir = std::env::var_os("WINDIR").map_or_else(|| PathBuf::from("C:\\Windows"), PathBuf::from);
         v.push(windir.join("Fonts"));

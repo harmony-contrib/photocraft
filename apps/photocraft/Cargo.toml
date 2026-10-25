@@ -7,7 +7,11 @@ default-run = "photocraft"
 description = "PhotoCraft: an open-source, native image editor"
 build = "build.rs"
 
+[lib]
+crate-type = ["rlib"]
+
 [features]
+ohos-control = []
 # Open HEIC/HEIF photos (the optional photocraft-heif crate). Not default so distributors choose
 # it; official builds (CI, packaging/, release) build with `--features heif`.
 heif = ["photocraft-codecs/heif"]
@@ -28,7 +32,6 @@ photocraft-format = { workspace = true }
 photocraft-automation = { workspace = true }
 photocraft-ui-egui = { workspace = true }
 # Pen tablet pressure/tilt on macOS and X11 (the workspace's one isolated unsafe helper crate).
-photocraft-tablet = { workspace = true }
 eframe = { workspace = true, features = ["wgpu", "accesskit", "wayland", "x11", "persistence", "clipboard"] }
 egui = { workspace = true }
 serde = { workspace = true }
@@ -42,7 +45,10 @@ thiserror = { workspace = true }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tempfile = "=3.27.0"
 roxmltree = "0.21"
+
+[target.'cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))'.dependencies]
 craft-update = { workspace = true }
+photocraft-tablet = { workspace = true }
 rfd = { workspace = true }
 arboard = { version = "3.7", features = ["wayland-data-control"] }
 open = "5"
@@ -82,7 +88,7 @@ rustix = { version = "=1.1.5", features = ["fs"] }
 plist = { version = "=1.10.3", features = ["enable_unstable_features_that_may_break_with_minor_version_bumps"] }
 
 # Drop position on X11 (`cursor.rs`): pure-Rust X client, already in Cargo.lock; pinned exactly.
-[target.'cfg(target_os = "linux")'.dependencies]
+[target.'cfg(all(target_os = "linux", not(target_env = "ohos")))'.dependencies]
 photocraft-cms = { workspace = true }
 # The print portal's PDF: a private (0600) temporary file, removed when the dialog is done.
 tempfile = "3"
@@ -126,3 +132,8 @@ winresource = "0.1"
 [dev-dependencies]
 # Opt-in native save-back acceptance transports embedded sources through engine JSON.
 base64 = "=0.22.1"
+
+[target.'cfg(target_env = "ohos")'.dependencies]
+winit = { version = "=0.30.13", default-features = false, features = ["rwh_06", "extended-plugins"] }
+ohos-hilog-binding = { version = "0.2.3", features = ["log"] }
+openharmony-ability = { git = "https://github.com/harmony-contrib/openharmony-ability.git", rev = "f0c98ec1c40c1576acd1c999c75865c4c19ddec4" }
