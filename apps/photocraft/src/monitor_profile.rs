@@ -21,13 +21,13 @@ use photocraft_engine::display_color::Display;
 pub type Detection = Result<Vec<Display>, String>;
 
 /// Starts reading the displays in the background; `None` when the platform has no reader.
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(all(target_os = "linux", not(target_env = "ohos"))))]
 pub fn detect_async() -> Option<Receiver<Detection>> {
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_env = "ohos"))]
     {
         Some(spawn_reader(detect))
     }
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", target_env = "ohos")))]
     {
         None
     }
@@ -36,12 +36,12 @@ pub fn detect_async() -> Option<Receiver<Detection>> {
 /// Linux display profile reads are supported only for an X11 session. In particular, an app
 /// window opened through Xwayland still belongs to the Wayland desktop and must not apply a
 /// compositor-managed output profile a second time.
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(target_env = "ohos")))]
 pub fn detect_async_for_session(session: crate::linux_libs::DisplaySession) -> Option<Receiver<Detection>> {
     (session == crate::linux_libs::DisplaySession::X11).then(|| spawn_reader(detect))
 }
 
-#[cfg(any(target_os = "macos", target_os = "linux"))]
+#[cfg(any(target_os = "macos", target_os = "linux", target_env = "ohos"))]
 fn spawn_reader(detect: fn() -> Detection) -> Receiver<Detection> {
     let (tx, rx) = std::sync::mpsc::channel();
     std::thread::spawn(move || {
@@ -133,12 +133,84 @@ fn run_helper(cmd: &mut std::process::Command, timeout: std::time::Duration) -> 
     Ok(String::from_utf8_lossy(&out).into_owned())
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(target_env = "ohos")]
+pub fn detect() -> Detection {
+    let raw_displays = openharmony_ability::display::all_displays()
+        .ok()
+        .filter(|list| !list.is_empty())
+        .or_else(|| openharmony_ability::display::primary_display().ok().map(|d| vec![d]));
+
+    let mut displays = Vec::new();
+    if let Some(raw_displays) = raw_displays {
+        for info in raw_displays {
+            if info.width <= 0 || info.height <= 0 {
+                continue;
+            }
+            let (px_x, px_y) = openharmony_ability::display::display_position(u64::from(info.id)).unwrap_or((0, 0));
+            let scale = if info.density_pixels.is_finite() && info.density_pixels > 0.0 { f64::from(info.density_pixels) } else { 1.0 };
+            let frame = [f64::from(px_x) / scale, f64::from(px_y) / scale, f64::from(info.width) / scale, f64::from(info.height) / scale];
+            let trimmed = info.name.trim();
+            let name = if trimmed.is_empty() { format!("Display {}", info.id) } else { trimmed.to_owned() };
+            let (builtin, profile_label) = ohos_color_space_builtin(&info.color_spaces);
+            displays.push(Display { id: info.id, name, frame, profile_name: Some(profile_label.to_owned()), icc: Some(builtin.profile().to_bytes()) });
+        }
+    }
+
+    if displays.is_empty() {
+        let id = u32::try_from(openharmony_ability::display::default_display_id()).unwrap_or(0);
+        let width = openharmony_ability::display::default_display_width();
+        let height = openharmony_ability::display::default_display_height();
+        if width <= 0 || height <= 0 {
+            return Err("OpenHarmony display manager reported no active display".into());
+        }
+        let scale = f64::from(openharmony_ability::display::default_display_virtual_pixel_ratio());
+        let scale = if scale.is_finite() && scale > 0.0 { scale } else { 1.0 };
+        let (builtin, profile_label) = ohos_color_space_builtin(&[]);
+        displays.push(Display {
+            id,
+            name: format!("Display {id}"),
+            frame: [0.0, 0.0, f64::from(width) / scale, f64::from(height) / scale],
+            profile_name: Some(profile_label.to_owned()),
+            icc: Some(builtin.profile().to_bytes()),
+        });
+    }
+    Ok(displays)
+}
+
+#[cfg(target_env = "ohos")]
+pub fn profile_for_display(display_id: u32) -> Option<Vec<u8>> {
+    let displays = detect().ok()?;
+    let matched = displays.iter().find(|d| d.id == display_id).or_else(|| displays.first())?;
+    matched.icc.as_ref().map(|arc| (**arc).clone())
+}
+
+/// Maps OpenHarmony `OH_NativeColorSpaceManager` `ColorSpaceName` enum values
+/// (`NativeDisplayManager_DisplayInfo::colorSpace`) to the closest built-in ICC profile.
+#[cfg_attr(not(target_env = "ohos"), allow(dead_code))]
+fn ohos_color_space_builtin(color_spaces: &[u32]) -> (photocraft_cms::Builtin, &'static str) {
+    use photocraft_cms::Builtin;
+    // DCI_P3 = 2, DISPLAY_P3 = 3, P3_HLG = 11, P3_PQ = 12, DISPLAY_P3_LIMIT = 14, LINEAR_P3 = 23
+    if color_spaces.iter().any(|&cs| matches!(cs, 2 | 3 | 11 | 12 | 14 | 23)) {
+        return (Builtin::DisplayP3, "Display P3");
+    }
+    // ADOBE_RGB = 1, ADOBE_RGB_LIMIT = 13
+    if color_spaces.iter().any(|&cs| matches!(cs, 1 | 13)) {
+        return (Builtin::AdobeRgbCompat, "Adobe RGB (1998)");
+    }
+    // BT2020 = 8, BT2020_HLG = 9, BT2020_PQ = 10, BT2020_LIMIT = 18, BT2020_HLG_LIMIT = 19,
+    // BT2020_PQ_LIMIT = 20, LINEAR_BT2020 = 25
+    if color_spaces.iter().any(|&cs| matches!(cs, 8 | 9 | 10 | 18 | 19 | 20 | 25)) {
+        return (Builtin::Rec2020, "Rec. ITU-R BT.2020");
+    }
+    (Builtin::Srgb, "sRGB IEC61966-2.1")
+}
+
+#[cfg(all(target_os = "linux", not(target_env = "ohos")))]
 fn detect() -> Detection {
     linux::detect()
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(target_env = "ohos")))]
 mod linux {
     use std::collections::{BTreeMap, HashMap};
     use std::io::Read as _;
@@ -522,6 +594,21 @@ mod tests {
             s.push('=');
         }
         s
+    }
+
+    #[test]
+    fn ohos_color_spaces_map_to_valid_icc_profiles() {
+        use photocraft_cms::Builtin;
+        assert_eq!(ohos_color_space_builtin(&[4, 3]), (Builtin::DisplayP3, "Display P3"));
+        assert_eq!(ohos_color_space_builtin(&[1]), (Builtin::AdobeRgbCompat, "Adobe RGB (1998)"));
+        assert_eq!(ohos_color_space_builtin(&[9]), (Builtin::Rec2020, "Rec. ITU-R BT.2020"));
+        assert_eq!(ohos_color_space_builtin(&[]), (Builtin::Srgb, "sRGB IEC61966-2.1"));
+        for cs in [&[3u32][..], &[1u32][..], &[9u32][..], &[][..]] {
+            let (builtin, _) = ohos_color_space_builtin(cs);
+            let bytes = builtin.profile().to_bytes();
+            let parsed = photocraft_engine::color_cmds::profile_from_bytes(&bytes).expect("valid ICC");
+            assert_eq!(format!("{:?}", parsed.color_space), "Rgb");
+        }
     }
 
     /// On a Mac, every display is read, and the profiles parse as RGB profiles.

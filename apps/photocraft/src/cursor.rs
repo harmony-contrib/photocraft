@@ -43,7 +43,7 @@ mod platform {
     }
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(target_env = "ohos")))]
 mod platform {
     use eframe::wgpu::rwh::{HasWindowHandle, RawWindowHandle};
     use photocraft_ui_egui::CursorPosFn;
@@ -102,7 +102,24 @@ fn client_points(screen_px: egui::Pos2, inner_min: egui::Pos2, ppp: f32) -> egui
     ((screen_px - inner_min * ppp) / ppp).to_pos2()
 }
 
-#[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
+#[cfg(target_env = "ohos")]
+mod platform {
+    use photocraft_ui_egui::CursorPosFn;
+
+    pub fn service(_cc: &eframe::CreationContext<'_>) -> Option<CursorPosFn> {
+        Some(Box::new(|ctx: &egui::Context| {
+            if let Some((x, y)) = winit::platform::ohos::drag_drop::last_position() {
+                let ppp = ctx.pixels_per_point();
+                if ppp.is_finite() && ppp > 0.0 {
+                    return Some(egui::pos2(x as f32 / ppp, y as f32 / ppp));
+                }
+            }
+            ctx.input(|i| i.pointer.latest_pos())
+        }))
+    }
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows", target_env = "ohos")))]
 mod platform {
     use photocraft_ui_egui::CursorPosFn;
 

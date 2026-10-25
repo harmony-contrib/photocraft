@@ -4,7 +4,6 @@
 
 #[openharmony_ability_derive::ability]
 fn openharmony(app: openharmony_ability::OpenHarmonyApp) {
-    ohos_hilog_binding::log::init_once(ohos_hilog_binding::log::Config::default().with_max_level(log::LevelFilter::Info));
     if let Err(error) = photocraft::start(app) {
         log::error!("PhotoCraft startup failed: {error}");
     }

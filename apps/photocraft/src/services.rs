@@ -9,7 +9,6 @@ use photocraft_ui_egui::{Recoverable, Services};
 #[cfg(not(target_env = "ohos"))]
 use std::cell::Cell;
 use std::cell::RefCell;
-#[cfg(not(target_env = "ohos"))]
 use std::future::Future;
 use std::path::{Path, PathBuf};
 #[cfg(not(target_env = "ohos"))]
@@ -326,7 +325,6 @@ fn answer_one(path: &Path, saving: bool, make: impl FnOnce(String) -> FileDialog
 }
 
 /// Runs `future` to completion on this thread, sleeping until it is woken.
-#[cfg(not(target_env = "ohos"))]
 pub(crate) fn block_on<T>(future: impl Future<Output = T>) -> T {
     struct Unpark(std::thread::Thread);
     impl std::task::Wake for Unpark {

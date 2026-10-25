@@ -16,8 +16,14 @@ mod app_dirs {
 }
 mod control_server;
 mod crash_guard;
+mod cursor;
+mod gpu_startup;
+mod logging;
+mod monitor_profile;
 mod ohos;
 mod ohos_files;
+mod screen_color;
 mod services;
+mod ui_state;
 
 pub use ohos::start;

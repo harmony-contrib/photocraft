@@ -336,6 +336,7 @@ pub fn applicable_adapter(wanted: Option<String>, backend: GpuBackend, linux: bo
 /// Whether `PHOTOCRAFT_GPU_ADAPTER` makes this launch its own process: only when startup will act
 /// on it (a non-empty value, on Linux, outside CPU mode). Otherwise it changes nothing, and the
 /// launch may still be forwarded to the running window.
+#[cfg(any(test, not(target_env = "ohos")))]
 pub fn adapter_override_is_process_specific(env: Option<&str>, mode: RenderingMode, linux: bool) -> bool {
     env.is_some_and(|v| !v.trim().is_empty()) && linux && mode != RenderingMode::Cpu
 }
@@ -533,7 +534,7 @@ impl Sentinel {
 
 /// The Linux display-server preference (`performance.linuxDisplayServer`) from the preferences
 /// file, read before the window opens; `Auto` when the file or value is missing or unknown.
-#[cfg(any(target_os = "linux", test))]
+#[cfg(any(all(target_os = "linux", not(target_env = "ohos")), test))]
 pub fn read_display_server(path: Option<&Path>) -> photocraft_engine::prefs::LinuxDisplayServer {
     read_performance(path).map(|performance| performance.linux_display_server).unwrap_or_default()
 }

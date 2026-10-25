@@ -1,8 +1,8 @@
 # PhotoCraft on OpenHarmony
 
-The native editor uses egui/eframe **0.36.2** (`feat-openharmony`), wgpu **30.0.1**, and
+The native editor uses egui/eframe **0.37.0** (`feat-openharmony`), wgpu **30.0.1**, and
 `winit` **0.30.13** (`feat-openharmony`) with
-`winit::platform::ohos` and `openharmony-ability` (`385ce749121b56ea33226f8542e3f39afd6e5ed6`).
+`winit::platform::ohos` and `openharmony-ability` (`f0c98ec1c40c1576acd1c999c75865c4c19ddec4`).
 The Rust and ArkTS Ability packages
 are built from the same revision (`OPENHARMONY_ABILITY_DIR` defaults to `../openharmony-ability`). On API 23+, `files-save.patch` requests that
 the picker leave destination creation to Rust. The tested emulator nevertheless
