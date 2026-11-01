@@ -1400,17 +1400,18 @@ fn view_snap_off_survives_a_restart() {
 
 #[test]
 fn show_tooltips_preferences_turn_tooltips_off() {
+    let both = |ctx: &egui::Context| [egui::Theme::Dark, egui::Theme::Light].map(|t| ctx.style_of(t).interaction.tooltip_delay);
     let (mut app, _) = app_with_store();
     let ctx = egui::Context::default();
     tick(&mut app, &ctx);
-    assert_eq!(ctx.global_style().interaction.tooltip_delay, crate::theme::TOOLTIP_DELAY);
+    assert_eq!(both(&ctx), [crate::theme::TOOLTIP_DELAY, crate::theme::TOOLTIP_DELAY]);
     for path in ["interface.showTooltips", "tools.showTooltips"] {
         app.run("prefs.set", json!({"values": {path: false}})).unwrap();
         tick(&mut app, &ctx);
-        assert!(ctx.global_style().interaction.tooltip_delay.is_infinite(), "{path} off hides tooltips");
+        assert!(both(&ctx).into_iter().all(f32::is_infinite), "{path} off hides tooltips");
         app.run("prefs.set", json!({"values": {path: true}})).unwrap();
         tick(&mut app, &ctx);
-        assert_eq!(ctx.global_style().interaction.tooltip_delay, crate::theme::TOOLTIP_DELAY);
+        assert_eq!(both(&ctx), [crate::theme::TOOLTIP_DELAY, crate::theme::TOOLTIP_DELAY]);
     }
 }
 

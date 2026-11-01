@@ -176,12 +176,13 @@ pub(super) fn sync_display_scale(app: &PhotocraftApp, ctx: &egui::Context) {
 
 /// Interface › Show Tooltips and Tools › Show Tooltips (either one off hides them): egui never
 /// shows a tooltip whose delay is infinite. Re-checked every frame because a theme change
-/// rebuilds the style; that's one style read, and a write only when it differs.
+/// rebuilds the style; both the dark and light styles are set, so a system appearance switch
+/// keeps it.
 pub(super) fn sync_tooltips(app: &PhotocraftApp, ctx: &egui::Context) {
     let p = app.session.prefs();
     let delay = if p.interface.show_tooltips && p.tools.show_tooltips { crate::theme::TOOLTIP_DELAY } else { f32::INFINITY };
     if ctx.global_style().interaction.tooltip_delay != delay {
-        ctx.global_style_mut(|s| s.interaction.tooltip_delay = delay);
+        ctx.all_styles_mut(|s| s.interaction.tooltip_delay = delay);
     }
 }
 
