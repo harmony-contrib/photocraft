@@ -21,8 +21,8 @@ ohos-control = ["photocraft/ohos-control"]
 [target.'cfg(target_env = "ohos")'.dependencies]
 photocraft = { path = "../photocraft" }
 log.workspace = true
-openharmony-ability = { git = "https://github.com/harmony-contrib/openharmony-ability.git", rev = "f0c98ec1c40c1576acd1c999c75865c4c19ddec4" }
-openharmony-ability-derive = { git = "https://github.com/harmony-contrib/openharmony-ability.git", rev = "f0c98ec1c40c1576acd1c999c75865c4c19ddec4" }
+openharmony-ability = "1.0.0-beta.5"
+openharmony-ability-derive = "1.0.0-beta.5"
 napi-ohos = "1.2"
 napi-derive-ohos = "1.2"
 ohos-hilog-binding = { version = "0.2.3", features = ["log"] }

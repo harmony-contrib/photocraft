@@ -337,7 +337,6 @@ impl AppLogger {
 
     /// The log file records are written to, once [`AppLogger::attach_dir`] opened one: `None` when
     /// the file could not be created (standard error is the only sink, see [`install`]).
-    #[cfg(any(test, not(target_env = "ohos")))]
     pub fn path(&self) -> Option<PathBuf> {
         self.path.lock().unwrap_or_else(PoisonError::into_inner).clone()
     }
@@ -356,16 +355,6 @@ impl log::Log for AppLogger {
         let line = format_line(&timestamp(SystemTime::now()), record.level(), thread.name().unwrap_or("?"), record.target(), &record.args().to_string());
         if self.stderr {
             let _ = std::io::stderr().write_all(line.as_bytes());
-            #[cfg(target_env = "ohos")]
-            {
-                let hilog_msg = line.trim_end_matches('\n').replace('\0', "");
-                match record.level() {
-                    log::Level::Error => ohos_hilog_binding::error(hilog_msg),
-                    log::Level::Warn => ohos_hilog_binding::warn(hilog_msg),
-                    log::Level::Info => ohos_hilog_binding::info(hilog_msg),
-                    log::Level::Debug | log::Level::Trace => ohos_hilog_binding::debug(hilog_msg),
-                }
-            }
         }
         self.sink.lock().unwrap_or_else(PoisonError::into_inner).write(&line);
     }

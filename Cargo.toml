@@ -184,22 +184,20 @@ opt-level = "z"
 [profile.wasm-release.package.photocraft-paint]
 opt-level = 3
 
-# Local adapted winit (0.30.13 feat-openharmony) and egui (0.37.0 feat-openharmony).
+# Keep the complete egui family and native event bridge on reviewed fork commits.
 [patch.crates-io]
-ecolor = { path = "../egui/crates/ecolor" }
-emath = { path = "../egui/crates/emath" }
-epaint = { path = "../egui/crates/epaint" }
-epaint_default_fonts = { path = "../egui/crates/epaint_default_fonts" }
-egui = { path = "../egui/crates/egui" }
-egui-winit = { path = "../egui/crates/egui-winit" }
-egui-wgpu = { path = "../egui/crates/egui-wgpu" }
-egui_glow = { path = "../egui/crates/egui_glow" }
-egui_extras = { path = "../egui/crates/egui_extras" }
-egui_kittest = { path = "../egui/crates/egui_kittest" }
-egui_system_font_provider = { path = "../egui/crates/egui_system_font_provider" }
-eframe = { path = "../egui/crates/eframe" }
-egui_demo_lib = { path = "../egui/crates/egui_demo_lib" }
-egui_inspection = { path = "../egui/crates/egui_inspection" }
-winit = { path = "../winit" }
-glutin = { path = "../glutin/glutin" }
-glutin-winit = { path = "../glutin/glutin-winit" }
+ecolor = { git = "https://github.com/richerfu/egui.git", rev = "39da51286f0347cf08eaa46f59a5235fd5d2810d" }
+emath = { git = "https://github.com/richerfu/egui.git", rev = "39da51286f0347cf08eaa46f59a5235fd5d2810d" }
+epaint = { git = "https://github.com/richerfu/egui.git", rev = "39da51286f0347cf08eaa46f59a5235fd5d2810d" }
+epaint_default_fonts = { git = "https://github.com/richerfu/egui.git", rev = "39da51286f0347cf08eaa46f59a5235fd5d2810d" }
+egui = { git = "https://github.com/richerfu/egui.git", rev = "39da51286f0347cf08eaa46f59a5235fd5d2810d" }
+egui-winit = { git = "https://github.com/richerfu/egui.git", rev = "39da51286f0347cf08eaa46f59a5235fd5d2810d" }
+egui-wgpu = { git = "https://github.com/richerfu/egui.git", rev = "39da51286f0347cf08eaa46f59a5235fd5d2810d" }
+egui_glow = { git = "https://github.com/richerfu/egui.git", rev = "39da51286f0347cf08eaa46f59a5235fd5d2810d" }
+egui_extras = { git = "https://github.com/richerfu/egui.git", rev = "39da51286f0347cf08eaa46f59a5235fd5d2810d" }
+egui_kittest = { git = "https://github.com/richerfu/egui.git", rev = "39da51286f0347cf08eaa46f59a5235fd5d2810d" }
+egui_system_font_provider = { git = "https://github.com/richerfu/egui.git", rev = "39da51286f0347cf08eaa46f59a5235fd5d2810d" }
+eframe = { git = "https://github.com/richerfu/egui.git", rev = "39da51286f0347cf08eaa46f59a5235fd5d2810d" }
+egui_demo_lib = { git = "https://github.com/richerfu/egui.git", rev = "39da51286f0347cf08eaa46f59a5235fd5d2810d" }
+egui_inspection = { git = "https://github.com/richerfu/egui.git", rev = "39da51286f0347cf08eaa46f59a5235fd5d2810d" }
+winit = { git = "https://github.com/richerfu/winit.git", rev = "fe8cbb2e689b519b9282bc29b84c8ea6bc9df313" }

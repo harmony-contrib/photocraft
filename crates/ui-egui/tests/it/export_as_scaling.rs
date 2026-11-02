@@ -24,7 +24,6 @@ fn harness() -> Option<(Harness, Writes)> {
                     file_dialog: Some(Box::new(|request, _parent, reply| {
                         reply.send(match request {
                             FileDialogRequest::Save { suggested } => Some(FileDialogAnswer::SaveTo(suggested)),
-                            FileDialogRequest::AuthorizeSave { path } => Some(FileDialogAnswer::SaveTo(path)),
                             FileDialogRequest::Folder { .. } => None,
                             FileDialogRequest::Open { .. } => None,
                         })

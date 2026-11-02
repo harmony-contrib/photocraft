@@ -412,7 +412,7 @@ fn ime_delete_around(app: &mut PhotocraftApp, ed: TextEdit, from: usize, start: 
 }
 
 /// Update the Type tool's selection from native UTF-16 code-unit offsets (OpenHarmony IMF).
-#[cfg(any(target_env = "ohos", test))]
+#[cfg(target_env = "ohos")]
 pub(super) fn ime_select_utf16(app: &mut PhotocraftApp, start_utf16: usize, end_utf16: usize) -> bool {
     let Some(ed) = app.ui.text_edit.clone() else { return false };
     let Some(mut text) = current_text(app, LayerId(ed.layer)) else { return false };
@@ -451,7 +451,7 @@ pub(super) fn ime_select_utf16(app: &mut PhotocraftApp, start_utf16: usize, end_
 }
 
 /// Delete an active selection or UTF-16 code units around the caret (OpenHarmony IMF).
-#[cfg(any(target_env = "ohos", test))]
+#[cfg(target_env = "ohos")]
 pub(super) fn ime_delete_utf16(app: &mut PhotocraftApp, before_utf16: usize, after_utf16: usize) -> bool {
     let Some(ed) = app.ui.text_edit.clone() else { return false };
     let Some(mut text) = current_text(app, LayerId(ed.layer)) else { return false };

@@ -1813,6 +1813,7 @@ checksum = "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555"
 [[package]]
 name = "ecolor"
 version = "0.37.0"
+source = "git+https://github.com/richerfu/egui.git?rev=39da51286f0347cf08eaa46f59a5235fd5d2810d#39da51286f0347cf08eaa46f59a5235fd5d2810d"
 dependencies = [
  "bytemuck",
  "emath",
@@ -1822,6 +1823,7 @@ dependencies = [
 [[package]]
 name = "eframe"
 version = "0.37.0"
+source = "git+https://github.com/richerfu/egui.git?rev=39da51286f0347cf08eaa46f59a5235fd5d2810d#39da51286f0347cf08eaa46f59a5235fd5d2810d"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1858,6 +1860,7 @@ dependencies = [
 [[package]]
 name = "egui"
 version = "0.37.0"
+source = "git+https://github.com/richerfu/egui.git?rev=39da51286f0347cf08eaa46f59a5235fd5d2810d#39da51286f0347cf08eaa46f59a5235fd5d2810d"
 dependencies = [
  "accesskit",
  "ahash",
@@ -1878,6 +1881,7 @@ dependencies = [
 [[package]]
 name = "egui-wgpu"
 version = "0.37.0"
+source = "git+https://github.com/richerfu/egui.git?rev=39da51286f0347cf08eaa46f59a5235fd5d2810d#39da51286f0347cf08eaa46f59a5235fd5d2810d"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1896,6 +1900,7 @@ dependencies = [
 [[package]]
 name = "egui-winit"
 version = "0.37.0"
+source = "git+https://github.com/richerfu/egui.git?rev=39da51286f0347cf08eaa46f59a5235fd5d2810d#39da51286f0347cf08eaa46f59a5235fd5d2810d"
 dependencies = [
  "accesskit_winit",
  "arboard",
@@ -1921,6 +1926,7 @@ dependencies = [
 [[package]]
 name = "egui_extras"
 version = "0.37.0"
+source = "git+https://github.com/richerfu/egui.git?rev=39da51286f0347cf08eaa46f59a5235fd5d2810d#39da51286f0347cf08eaa46f59a5235fd5d2810d"
 dependencies = [
  "ahash",
  "egui",
@@ -1934,6 +1940,7 @@ dependencies = [
 [[package]]
 name = "egui_glow"
 version = "0.37.0"
+source = "git+https://github.com/richerfu/egui.git?rev=39da51286f0347cf08eaa46f59a5235fd5d2810d#39da51286f0347cf08eaa46f59a5235fd5d2810d"
 dependencies = [
  "bytemuck",
  "egui",
@@ -1946,6 +1953,7 @@ dependencies = [
 [[package]]
 name = "egui_kittest"
 version = "0.37.0"
+source = "git+https://github.com/richerfu/egui.git?rev=39da51286f0347cf08eaa46f59a5235fd5d2810d#39da51286f0347cf08eaa46f59a5235fd5d2810d"
 dependencies = [
  "dify",
  "eframe",
@@ -1971,6 +1979,7 @@ checksum = "252afb9ae5eaa683babdc6a068b3f5726eb19e05070c731f9b2a23a7c3e8ed34"
 [[package]]
 name = "emath"
 version = "0.37.0"
+source = "git+https://github.com/richerfu/egui.git?rev=39da51286f0347cf08eaa46f59a5235fd5d2810d#39da51286f0347cf08eaa46f59a5235fd5d2810d"
 dependencies = [
  "bytemuck",
  "serde",
@@ -2060,6 +2069,7 @@ dependencies = [
 [[package]]
 name = "epaint"
 version = "0.37.0"
+source = "git+https://github.com/richerfu/egui.git?rev=39da51286f0347cf08eaa46f59a5235fd5d2810d#39da51286f0347cf08eaa46f59a5235fd5d2810d"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -2086,6 +2096,7 @@ dependencies = [
 [[package]]
 name = "epaint_default_fonts"
 version = "0.37.0"
+source = "git+https://github.com/richerfu/egui.git?rev=39da51286f0347cf08eaa46f59a5235fd5d2810d#39da51286f0347cf08eaa46f59a5235fd5d2810d"
 
 [[package]]
 name = "equator"
@@ -2711,20 +2722,22 @@ dependencies = [
 
 [[package]]
 name = "glutin"
-version = "0.32.2"
+version = "0.32.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "12124de845cacfebedff80e877bb37b5b75c34c5a4c89e47e1cdd67fb6041325"
 dependencies = [
  "bitflags 2.13.2",
  "cfg_aliases",
  "cgl",
- "core-foundation 0.9.4",
- "dispatch",
+ "dispatch2",
  "glutin_egl_sys",
  "glutin_glx_sys",
- "glutin_wgl_sys 0.6.1",
+ "glutin_wgl_sys",
  "libloading 0.8.9",
- "objc2 0.5.2",
- "objc2-app-kit 0.2.2",
- "objc2-foundation 0.2.2",
+ "objc2 0.6.5",
+ "objc2-app-kit 0.3.2",
+ "objc2-core-foundation",
+ "objc2-foundation 0.3.2",
  "once_cell",
  "raw-window-handle",
  "wayland-sys",
@@ -2735,6 +2748,8 @@ dependencies = [
 [[package]]
 name = "glutin-winit"
 version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85edca7075f8fc728f28cb8fbb111a96c3b89e930574369e3e9c27eb75d3788f"
 dependencies = [
  "cfg_aliases",
  "glutin",
@@ -2745,6 +2760,8 @@ dependencies = [
 [[package]]
 name = "glutin_egl_sys"
 version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c4680ba6195f424febdc3ba46e7a42a0e58743f2edb115297b86d7f8ecc02d2"
 dependencies = [
  "gl_generator",
  "windows-sys 0.52.0",
@@ -2753,16 +2770,11 @@ dependencies = [
 [[package]]
 name = "glutin_glx_sys"
 version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a7bb2938045a88b612499fbcba375a77198e01306f52272e692f8c1f3751185"
 dependencies = [
  "gl_generator",
  "x11-dl",
-]
-
-[[package]]
-name = "glutin_wgl_sys"
-version = "0.6.1"
-dependencies = [
- "gl_generator",
 ]
 
 [[package]]
@@ -4808,9 +4820,9 @@ dependencies = [
 
 [[package]]
 name = "ohos-arkui-binding"
-version = "0.5.2"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "995c7f8ebd48d8942e8c2f08b044c962dd845503a43615ff1675d7e6bdceca63"
+checksum = "4241627ee00d934cdf393ccb2926798ac3ff75bd2b3d166438798d4700b720db"
 dependencies = [
  "bitflags 2.13.2",
  "log",
@@ -4856,6 +4868,21 @@ dependencies = [
  "ohos-native-drawing-sys",
  "ohos-udmf-sys",
 ]
+
+[[package]]
+name = "ohos-device-binding"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d1e79e623b0d9eacee56d9968b66b4f586477201fd5fb234cccf05b5d6979baa"
+dependencies = [
+ "ohos-device-sys",
+]
+
+[[package]]
+name = "ohos-device-sys"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "be3125873f2c81c78eccc7b2f2a32e37943e1d2a35132848173ad783d5320b14"
 
 [[package]]
 name = "ohos-display-binding"
@@ -5005,6 +5032,21 @@ dependencies = [
  "ohos-input-method-sys",
  "rustc-hash 2.1.3",
 ]
+
+[[package]]
+name = "ohos-init-binding"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4196292a03732a0e6451f0bdf2e11452187b0030cf3a9d30d86e9b420a6b811a"
+dependencies = [
+ "ohos-init-sys",
+]
+
+[[package]]
+name = "ohos-init-sys"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2268ec3fe2db7f5a1b5a226aa5ae5376e7f540ee27b1f397211149df6ae83fb3"
 
 [[package]]
 name = "ohos-input-method-sys"
@@ -5208,17 +5250,20 @@ dependencies = [
 
 [[package]]
 name = "openharmony-ability"
-version = "1.0.0-beta.4"
-source = "git+https://github.com/harmony-contrib/openharmony-ability.git?rev=f0c98ec1c40c1576acd1c999c75865c4c19ddec4#f0c98ec1c40c1576acd1c999c75865c4c19ddec4"
+version = "1.0.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3d65db22273d3afdef8fd8eb9411546243aae365236829e67a8deca79eed5f1"
 dependencies = [
  "futures-channel",
  "log",
  "napi-derive-ohos",
  "napi-ohos",
  "ohos-arkui-binding",
+ "ohos-device-binding",
  "ohos-display-binding",
  "ohos-image-native-binding",
  "ohos-ime-binding",
+ "ohos-init-binding",
  "ohos-resource-manager-binding",
  "ohos-udmf-binding",
  "ohos-window-manager-binding",
@@ -5232,8 +5277,9 @@ dependencies = [
 
 [[package]]
 name = "openharmony-ability-derive"
-version = "1.0.0-beta.4"
-source = "git+https://github.com/harmony-contrib/openharmony-ability.git?rev=f0c98ec1c40c1576acd1c999c75865c4c19ddec4#f0c98ec1c40c1576acd1c999c75865c4c19ddec4"
+version = "1.0.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b66144e32d0b645c0daab0528d00c6e11f1fb84a7378920ed895f5650f47654"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5242,8 +5288,9 @@ dependencies = [
 
 [[package]]
 name = "openharmony-ability-plugin-accessibility"
-version = "1.0.0-beta.4"
-source = "git+https://github.com/harmony-contrib/openharmony-ability.git?rev=f0c98ec1c40c1576acd1c999c75865c4c19ddec4#f0c98ec1c40c1576acd1c999c75865c4c19ddec4"
+version = "1.0.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6486c404c42e77b9c0ede9c6c8904a85c18f5db1d5c2b446a7d7ba824eec261a"
 dependencies = [
  "log",
  "napi-derive-ohos",
@@ -5253,8 +5300,9 @@ dependencies = [
 
 [[package]]
 name = "openharmony-ability-plugin-app-control"
-version = "1.0.0-beta.4"
-source = "git+https://github.com/harmony-contrib/openharmony-ability.git?rev=f0c98ec1c40c1576acd1c999c75865c4c19ddec4#f0c98ec1c40c1576acd1c999c75865c4c19ddec4"
+version = "1.0.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e4769f14c0e9635089a94187e9c44222af306778309982f0bd82f049d2a67f1b"
 dependencies = [
  "napi-derive-ohos",
  "napi-ohos",
@@ -5263,8 +5311,9 @@ dependencies = [
 
 [[package]]
 name = "openharmony-ability-plugin-clipboard"
-version = "1.0.0-beta.4"
-source = "git+https://github.com/harmony-contrib/openharmony-ability.git?rev=f0c98ec1c40c1576acd1c999c75865c4c19ddec4#f0c98ec1c40c1576acd1c999c75865c4c19ddec4"
+version = "1.0.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fe85fd55b752976b979461953c313e554eacd17a0d19115fde2cd5e603ec008"
 dependencies = [
  "napi-derive-ohos",
  "napi-ohos",
@@ -5276,8 +5325,9 @@ dependencies = [
 
 [[package]]
 name = "openharmony-ability-plugin-files"
-version = "1.0.0-beta.4"
-source = "git+https://github.com/harmony-contrib/openharmony-ability.git?rev=f0c98ec1c40c1576acd1c999c75865c4c19ddec4#f0c98ec1c40c1576acd1c999c75865c4c19ddec4"
+version = "1.0.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7e44e60d302d84ea28161fbabbf2e2f9217d282ce2bdddd60f01d819ed78635"
 dependencies = [
  "napi-derive-ohos",
  "napi-ohos",
@@ -5286,8 +5336,9 @@ dependencies = [
 
 [[package]]
 name = "openharmony-ability-plugin-menu"
-version = "1.0.0-beta.4"
-source = "git+https://github.com/harmony-contrib/openharmony-ability.git?rev=f0c98ec1c40c1576acd1c999c75865c4c19ddec4#f0c98ec1c40c1576acd1c999c75865c4c19ddec4"
+version = "1.0.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7249e7a2c0d8ed02745c9c93337bdc7b7e5bdf0e70d37944a4180a487133756"
 dependencies = [
  "crossbeam-channel",
  "napi-derive-ohos",
@@ -5299,8 +5350,9 @@ dependencies = [
 
 [[package]]
 name = "openharmony-ability-plugin-notification"
-version = "1.0.0-beta.4"
-source = "git+https://github.com/harmony-contrib/openharmony-ability.git?rev=f0c98ec1c40c1576acd1c999c75865c4c19ddec4#f0c98ec1c40c1576acd1c999c75865c4c19ddec4"
+version = "1.0.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ffb1b97ae77ca02fcffeb7c94279017058a95b694f461b040bf01a410d230a6"
 dependencies = [
  "napi-derive-ohos",
  "napi-ohos",
@@ -5309,8 +5361,9 @@ dependencies = [
 
 [[package]]
 name = "openharmony-ability-plugin-permission"
-version = "1.0.0-beta.4"
-source = "git+https://github.com/harmony-contrib/openharmony-ability.git?rev=f0c98ec1c40c1576acd1c999c75865c4c19ddec4#f0c98ec1c40c1576acd1c999c75865c4c19ddec4"
+version = "1.0.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3084417281b05519b10aca71d313794cdb1176459d6ee72944923f0f26cf407"
 dependencies = [
  "napi-derive-ohos",
  "napi-ohos",
@@ -5319,8 +5372,9 @@ dependencies = [
 
 [[package]]
 name = "openharmony-ability-plugin-process"
-version = "1.0.0-beta.4"
-source = "git+https://github.com/harmony-contrib/openharmony-ability.git?rev=f0c98ec1c40c1576acd1c999c75865c4c19ddec4#f0c98ec1c40c1576acd1c999c75865c4c19ddec4"
+version = "1.0.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ee3500d9568e5e44d67a3856a02924fe266b2a571beac1898d8ea0f0c0b70fa"
 dependencies = [
  "napi-derive-ohos",
  "napi-ohos",
@@ -5329,8 +5383,9 @@ dependencies = [
 
 [[package]]
 name = "openharmony-ability-plugin-system-state"
-version = "1.0.0-beta.4"
-source = "git+https://github.com/harmony-contrib/openharmony-ability.git?rev=f0c98ec1c40c1576acd1c999c75865c4c19ddec4#f0c98ec1c40c1576acd1c999c75865c4c19ddec4"
+version = "1.0.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a26cf57d26b4c7e55226913b1b1c766c4f2331db42d00743aee383cb47611596"
 dependencies = [
  "crossbeam-channel",
  "napi-derive-ohos",
@@ -5340,8 +5395,9 @@ dependencies = [
 
 [[package]]
 name = "openharmony-ability-plugin-url"
-version = "1.0.0-beta.4"
-source = "git+https://github.com/harmony-contrib/openharmony-ability.git?rev=f0c98ec1c40c1576acd1c999c75865c4c19ddec4#f0c98ec1c40c1576acd1c999c75865c4c19ddec4"
+version = "1.0.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "891de71b5f9160b44ca4f6fc8759b79e95e70bb6343b8b9d949df457547f0952"
 dependencies = [
  "napi-derive-ohos",
  "napi-ohos",
@@ -5350,8 +5406,9 @@ dependencies = [
 
 [[package]]
 name = "openharmony-ability-plugin-window"
-version = "1.0.0-beta.4"
-source = "git+https://github.com/harmony-contrib/openharmony-ability.git?rev=f0c98ec1c40c1576acd1c999c75865c4c19ddec4#f0c98ec1c40c1576acd1c999c75865c4c19ddec4"
+version = "1.0.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f85c80fe2b8a4193f6b753e56051770701800da65a0f4a525c7fe75fc656c83e"
 dependencies = [
  "napi-derive-ohos",
  "napi-ohos",
@@ -9213,7 +9270,7 @@ dependencies = [
  "cfg-if",
  "cfg_aliases",
  "glow",
- "glutin_wgl_sys 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glutin_wgl_sys",
  "gpu-allocator",
  "hashbrown 0.17.1",
  "js-sys",
@@ -9531,6 +9588,7 @@ checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
 [[package]]
 name = "winit"
 version = "0.30.13"
+source = "git+https://github.com/richerfu/winit.git?rev=fe8cbb2e689b519b9282bc29b84c8ea6bc9df313#fe8cbb2e689b519b9282bc29b84c8ea6bc9df313"
 dependencies = [
  "ahash",
  "android-activity",
@@ -10243,11 +10301,14 @@ dependencies = [
 [[patch.unused]]
 name = "egui_demo_lib"
 version = "0.37.0"
+source = "git+https://github.com/richerfu/egui.git?rev=39da51286f0347cf08eaa46f59a5235fd5d2810d#39da51286f0347cf08eaa46f59a5235fd5d2810d"
 
 [[patch.unused]]
 name = "egui_inspection"
 version = "0.37.0"
+source = "git+https://github.com/richerfu/egui.git?rev=39da51286f0347cf08eaa46f59a5235fd5d2810d#39da51286f0347cf08eaa46f59a5235fd5d2810d"
 
 [[patch.unused]]
 name = "egui_system_font_provider"
 version = "0.37.0"
+source = "git+https://github.com/richerfu/egui.git?rev=39da51286f0347cf08eaa46f59a5235fd5d2810d#39da51286f0347cf08eaa46f59a5235fd5d2810d"

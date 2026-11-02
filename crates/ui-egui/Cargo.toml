@@ -43,13 +43,13 @@ flate2 = { workspace = true }
 web-time = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# Floating panels open in their own OS windows on the desktop; the web keeps them in the page.
+craft-ui = { workspace = true, features = ["native-windows"] }
 rayon = { workspace = true }
 # Safe native UI-language APIs (Windows/macOS); no subprocess or web dependency.
 sys-locale = "=0.3.2"
 
 [target.'cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))'.dependencies]
-# Floating panels open in their own OS windows on the desktop; the web and single-window mobile/OHOS shells keep them in the main window.
-craft-ui = { workspace = true, features = ["native-windows"] }
 craft-update = { workspace = true }
 
 # Installed RAM for the GPU memory budget (`gpu_canvas::physical_memory`) and the user's decimal

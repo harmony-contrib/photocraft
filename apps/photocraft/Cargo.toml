@@ -136,4 +136,4 @@ base64 = "=0.22.1"
 [target.'cfg(target_env = "ohos")'.dependencies]
 winit = { version = "=0.30.13", default-features = false, features = ["rwh_06", "extended-plugins"] }
 ohos-hilog-binding = { version = "0.2.3", features = ["log"] }
-openharmony-ability = { git = "https://github.com/harmony-contrib/openharmony-ability.git", rev = "f0c98ec1c40c1576acd1c999c75865c4c19ddec4" }
+openharmony-ability = "1.0.0-beta.5"
