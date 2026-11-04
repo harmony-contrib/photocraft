@@ -32,6 +32,11 @@ pub(crate) use thumbs::layer_thumb_frame;
 pub use thumbs::surface_fingerprint;
 
 impl PhotocraftApp {
+    /// Display name supplied by the host, or the original standalone identity.
+    pub fn app_name(&self) -> &'static str {
+        self.services.branding.map_or("PhotoCraft", |branding| branding.name)
+    }
+
     pub fn new(mut session: Session, mut services: Services) -> Self {
         session.updates.check = services.check_updates.take();
         let mut app = Self {

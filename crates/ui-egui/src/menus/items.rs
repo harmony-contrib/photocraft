@@ -241,6 +241,11 @@ pub fn menu_items(app: &PhotocraftApp) -> Vec<MenuItem> {
         item.label = "Release Clipping Mask".into();
         item.enabled = is_enabled(app, &item.id);
     }
+    if app.services.branding.is_some()
+        && let Some(about) = items.iter_mut().find(|item| item.id == "help.about")
+    {
+        about.label = crate::i18n::tr(crate::i18n::current(), "About PhotoCraft").replace("PhotoCraft", app.app_name());
+    }
     items
 }
 

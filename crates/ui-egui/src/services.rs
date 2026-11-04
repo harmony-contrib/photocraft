@@ -370,6 +370,8 @@ pub type RightButtonDownFn = Box<dyn Fn() -> bool + Send + Sync>;
 /// I/O dependencies.
 #[derive(Default)]
 pub struct Services {
+    /// Optional identity for a host embedding the editor.
+    pub branding: Option<crate::Branding>,
     /// Explicit interactive SVG smart-object editing; unavailable in browser and automation.
     pub open_external_svg: Option<OpenExternalSvgFn>,
     /// User-initiated desktop/browser pixel sampling.

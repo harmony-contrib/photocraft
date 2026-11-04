@@ -226,7 +226,7 @@ pub(crate) fn reveal_label() -> &'static str {
 /// Reuse the existing translated PNG sentence, so dynamic formats work in every UI language.
 pub(super) fn translated_menu_label(lang: crate::i18n::Lang, item: &MenuItem) -> String {
     // A document's name is shown as it is.
-    if item.id.starts_with(DOCUMENT_ITEM) {
+    if item.id.starts_with(DOCUMENT_ITEM) || (item.id == "help.about" && item.label != "About PhotoCraft") {
         return item.label.clone();
     }
     if item.id == "file.export.quickExportAsPng"

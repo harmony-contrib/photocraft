@@ -10,8 +10,8 @@ use photocraft_codecs::{ChannelLayout, SampleType};
 const ICON_PNG: &[u8] = include_bytes!("../../../../assets/app-icon/hicolor/128x128/apps/ai.storyteller.photocraft.png");
 
 /// The icon's pixels (one transparent pixel if it couldn't be decoded, which a test rules out).
-fn decode() -> egui::ColorImage {
-    let rgba = photocraft_codecs::decode(ICON_PNG).ok().map(|img| img.convert(ChannelLayout::Rgba, SampleType::U8));
+fn decode(icon_png: &[u8]) -> egui::ColorImage {
+    let rgba = photocraft_codecs::decode(icon_png).ok().map(|img| img.convert(ChannelLayout::Rgba, SampleType::U8));
     match rgba {
         Some(img) if img.data().len() == img.width() as usize * img.height() as usize * 4 => {
             egui::ColorImage::from_rgba_unmultiplied([img.width() as usize, img.height() as usize], img.data())
@@ -21,13 +21,13 @@ fn decode() -> egui::ColorImage {
 }
 
 /// The icon texture, uploaded on first use and kept in the context.
-fn texture(ctx: &Context) -> TextureHandle {
-    let id = Id::unique("photocraft-brand-mark");
+fn texture(ctx: &Context, icon_png: &'static [u8]) -> TextureHandle {
+    let id = Id::unique(("photocraft-brand-mark", icon_png.as_ptr(), icon_png.len()));
     if let Some(tex) = ctx.data(|d| d.get_temp::<TextureHandle>(id)) {
         return tex;
     }
     let options = TextureOptions { mipmap_mode: Some(egui::TextureFilter::Linear), ..TextureOptions::LINEAR };
-    let tex = ctx.load_texture("photocraft-brand-mark", decode(), options);
+    let tex = ctx.load_texture("photocraft-brand-mark", decode(icon_png), options);
     ctx.data_mut(|d| d.insert_temp(id, tex.clone()));
     tex
 }
@@ -38,9 +38,9 @@ fn rect_id() -> Id {
 }
 
 /// Paint the mark into `r` (square).
-pub fn paint_mark(ui: &Ui, r: Rect) {
+pub fn paint_mark(ui: &Ui, r: Rect, branding: Option<crate::Branding>) {
     let uv = Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0));
-    ui.painter().image(texture(ui.ctx()).id(), r, uv, Color32::WHITE);
+    ui.painter().image(texture(ui.ctx(), branding.map_or(ICON_PNG, |branding| branding.icon_png)).id(), r, uv, Color32::WHITE);
     ui.ctx().data_mut(|d| d.insert_temp(rect_id(), r));
 }
 
@@ -55,8 +55,18 @@ mod tests {
     use super::*;
 
     #[test]
+    fn a_host_icon_does_not_reuse_the_original_texture() {
+        let ctx = Context::default();
+        let original = texture(&ctx, ICON_PNG);
+        let icon: &'static [u8] = b"invalid icon";
+        let host = texture(&ctx, icon);
+        assert_ne!(original.id(), host.id());
+        assert_eq!(host.id(), texture(&ctx, icon).id());
+    }
+
+    #[test]
     fn the_icon_decodes_to_a_rounded_128_px_tile() {
-        let img = decode();
+        let img = decode(ICON_PNG);
         assert_eq!(img.size, [128, 128]);
         // Rounded corners: the corner pixel is transparent, the centre opaque.
         assert_eq!(img.pixels[0].a(), 0);

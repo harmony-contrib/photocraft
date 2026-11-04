@@ -33,7 +33,7 @@ pub(super) fn start_screen(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
     ui.scope_builder(egui::UiBuilder::new().max_rect(card), |ui| {
         ui.vertical_centered(|ui| {
             ui.horizontal(|ui| {
-                let title = ui.painter().layout_no_wrap(tl!("PhotoCraft").into(), crate::theme::semibold(38.0), t.text);
+                let title = ui.painter().layout_no_wrap(app.app_name().into(), crate::theme::semibold(38.0), t.text);
                 let by = ui.painter().layout_no_wrap(tl!("open source").into(), egui::FontId::proportional(13.0), t.text_faint);
                 let total = title.size().x + by.size().x + 10.0;
                 ui.add_space(((card.width() - total) / 2.0).max(0.0));
@@ -78,10 +78,12 @@ pub(super) fn start_screen(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
                 ui.add_space(22.0);
                 home_recent(app, ui, &recent);
             }
-            ui.add_space(26.0);
-            crate::links::discord_button(app, ui, 190.0);
-            ui.add_space(10.0);
-            crate::links::link_row(app, ui);
+            if app.services.branding.is_none() {
+                ui.add_space(26.0);
+                crate::links::discord_button(app, ui, 190.0);
+                ui.add_space(10.0);
+                crate::links::link_row(app, ui);
+            }
         });
     });
 }
@@ -173,5 +175,38 @@ fn home_recent(app: &mut PhotocraftApp, ui: &mut egui::Ui, recent: &[String]) {
         && let Err(e) = app.open_path(&path)
     {
         app.open_failed(&crate::file_open::display_name(&path), &e);
+    }
+}
+
+#[cfg(test)]
+mod host_branding_tests {
+    fn home_text(branding: Option<crate::Branding>) -> Vec<String> {
+        fn collect(shape: &egui::Shape, text: &mut Vec<String>) {
+            match shape {
+                egui::Shape::Text(shape) => text.push(shape.galley.text().to_owned()),
+                egui::Shape::Vec(shapes) => shapes.iter().for_each(|shape| collect(shape, text)),
+                _ => {}
+            }
+        }
+        let ctx = egui::Context::default();
+        crate::PhotocraftApp::setup_context(&ctx, Default::default());
+        let mut app = crate::PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services { branding, ..Default::default() });
+        let output = ctx.run_ui(egui::RawInput::default(), |ui| super::start_screen(&mut app, ui));
+        let mut text = Vec::new();
+        for shape in &output.shapes {
+            collect(&shape.shape, &mut text);
+        }
+        output.drop_without_applying_deltas();
+        text
+    }
+
+    #[test]
+    fn home_uses_host_identity_without_upstream_community_links() {
+        let original = home_text(None);
+        assert!(original.iter().any(|text| text == "PhotoCraft"));
+        assert!(original.iter().any(|text| text == "ArtCraft"));
+        let host = home_text(Some(crate::Branding { name: "Host Photo", icon_png: &[], attribution: "Upstream contributors" }));
+        assert!(host.iter().any(|text| text == "Host Photo"));
+        assert!(!host.iter().any(|text| text.contains("PhotoCraft") || text.contains("ArtCraft") || text.contains("Discord")));
     }
 }

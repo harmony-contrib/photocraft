@@ -9,6 +9,14 @@
 #![recursion_limit = "256"]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
+/// Identity supplied by an independent application embedding the editor.
+#[derive(Clone, Copy, Debug)]
+pub struct Branding {
+    pub name: &'static str,
+    pub icon_png: &'static [u8],
+    pub attribution: &'static str,
+}
+
 /// PhotoCraft as craft-update knows it, with its 128 px icon and accent colour: the update
 /// prompt shows both, and an AppImage's menu entry gets the icon.
 #[cfg(all(not(target_arch = "wasm32"), not(target_env = "ohos")))]

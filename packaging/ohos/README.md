@@ -74,3 +74,12 @@ control listener. The automation read/write roots are the app's
 picker. See [the control protocol](../../docs/control-protocol.md).
 
 See [VALIDATION.md](VALIDATION.md) for the actual device checks and limitations.
+
+### Independent editor hosts
+
+The UI library accepts an optional `Services::branding` value containing the host
+application's display name, PNG icon and attribution. Set it before constructing
+`PhotocraftApp`; window titles, the title-bar mark, the Home screen and About use
+that identity. Branded hosts omit the standalone application's community links.
+The standalone application keeps its existing identity when this value is absent.
+Contributors and Models remain available in the About window for attribution.

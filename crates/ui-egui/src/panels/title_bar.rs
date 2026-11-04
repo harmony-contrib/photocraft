@@ -47,8 +47,8 @@ pub fn title_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
             let title = app
                 .session
                 .active()
-                .map(|d| format!("{}{}", if show_name { d.doc.name.as_str() } else { "PhotoCraft" }, if d.is_dirty() { "  •" } else { "" }))
-                .unwrap_or_else(|| "PhotoCraft".into());
+                .map(|d| format!("{}{}", if show_name { d.doc.name.as_str() } else { app.app_name() }, if d.is_dirty() { "  •" } else { "" }))
+                .unwrap_or_else(|| app.app_name().into());
             // The menus and the far-end controls are laid out first; the title is centred in
             // whatever room is left between them (`free`, left to right: menus then controls, or
             // controls then menus in a right-to-left UI), shortened or dropped rather than drawn
@@ -64,7 +64,7 @@ pub fn title_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
                 if !system {
                     let side = if t.pro { 18.0 } else { 20.0 };
                     let (mark, _) = ui.allocate_exact_size(vec2(side, side), Sense::hover());
-                    crate::brand::paint_mark(ui, mark);
+                    crate::brand::paint_mark(ui, mark, app.services.branding);
                     ui.add_space(6.0);
                 }
                 // With the macOS menu bar the menus are at the top of the screen instead. Either way
@@ -169,9 +169,12 @@ pub fn system_title_bar(app: &PhotocraftApp) -> bool {
 /// drops out and only the app name (and the `*`) remains (#5037).
 pub fn window_title(app: &PhotocraftApp) -> String {
     if !app.session.prefs().interface.show_file_name_in_title {
-        return format!("{}PhotoCraft", if app.session.active().is_some_and(|d| d.is_dirty()) { "*" } else { "" });
+        return format!("{}{}", if app.session.active().is_some_and(|d| d.is_dirty()) { "*" } else { "" }, app.app_name());
     }
-    app.session.active().map(|d| format!("{}{} \u{2014} PhotoCraft", if d.is_dirty() { "*" } else { "" }, d.doc.name)).unwrap_or_else(|| "PhotoCraft".into())
+    app.session
+        .active()
+        .map(|d| format!("{}{} \u{2014} {}", if d.is_dirty() { "*" } else { "" }, d.doc.name, app.app_name()))
+        .unwrap_or_else(|| app.app_name().into())
 }
 
 /// Keep the OS window title (and the taskbar / Alt-Tab entry) on the active file. Sends
@@ -212,4 +215,18 @@ pub(super) fn title_x(center: f32, left: f32, right: f32, width: f32) -> Option<
         return Some(lo);
     }
     Some((center - width / 2.0).clamp(lo, hi))
+}
+
+#[cfg(test)]
+mod host_branding_tests {
+    #[test]
+    fn window_title_uses_the_embedding_application_identity() {
+        let mut app = crate::PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        assert_eq!(super::window_title(&app), "PhotoCraft");
+        app.services.branding = Some(crate::Branding { name: "Host Photo", icon_png: &[], attribution: "Upstream contributors" });
+        assert_eq!(super::window_title(&app), "Host Photo");
+        let items = crate::menus::menu_items(&app);
+        let about = items.iter().find(|item| item.id == "help.about").unwrap();
+        assert_eq!(about.label, "About Host Photo");
+    }
 }

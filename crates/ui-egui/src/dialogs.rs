@@ -567,7 +567,11 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
         let mut fields = d.fields.clone();
         let mut outcome: Option<bool> = None; // Some(true)=OK, Some(false)=Cancel
         let mut apply_requested = false;
-        let title = display_title(&d);
+        let title = if d.kind == DialogKind::About && d.fields.get("systemInfo").and_then(Value::as_bool) != Some(true) && app.services.branding.is_some() {
+            display_title(&d).replace("PhotoCraft", app.app_name())
+        } else {
+            display_title(&d)
+        };
         let id = egui::Id::unique(("dialog", d.id));
         // Opens where the same dialog was last left (centred the first time), then its top-left
         // stays put (offset from the window's top-left, moved by dragging the title bar; view
@@ -782,14 +786,21 @@ fn about_tab_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, tab: &str) {
         "contributors" => crate::credits::contributors_ui(app, ui),
         "models" => crate::credits::models_ui(ui),
         _ => {
-            ui.label(tl!("PhotoCraft — an open-source, native image editor written in Rust."));
+            if let Some(branding) = app.services.branding {
+                ui.heading(branding.name);
+                ui.label(branding.attribution);
+            } else {
+                ui.label(tl!("PhotoCraft — an open-source, native image editor written in Rust."));
+            }
             ui.label(crate::i18n::fmt(tl!("Version {version}"), &[("version", &photocraft_engine::build_info::long_version())]));
             ui.add_space(12.0);
-            ui.vertical_centered(|ui| {
-                crate::links::discord_button(app, ui, 220.0);
-                ui.add_space(8.0);
-                crate::links::link_row(app, ui);
-            });
+            if app.services.branding.is_none() {
+                ui.vertical_centered(|ui| {
+                    crate::links::discord_button(app, ui, 220.0);
+                    ui.add_space(8.0);
+                    crate::links::link_row(app, ui);
+                });
+            }
             ui.add_space(10.0);
             ui.weak("egui · wgpu · photocraft-engine");
         }
